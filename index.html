@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playwright CLI — 具有 SKILLS 功能的 Playwright CLI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'Georgia', 'serif'],
+                        'sans': ['Source Sans 3', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        'ink': '#0a0a0a',
+                        'paper': '#fafaf8',
+                        'cream': '#f5f5f0',
+                        'gray': {
+                            '100': '#f0f0ec',
+                            '200': '#e0e0d8',
+                            '300': '#c0c0b8',
+                            '400': '#8a8a80',
+                            '500': '#6a6a60',
+                            '600': '#4a4a40',
+                            '700': '#2a2a20',
+                            '800': '#1a1a10',
+                        },
+                        'accent': '#c41e3a',
+                    },
+                    animation: {
+                        'reveal': 'reveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'fade-in': 'fadeIn 1.2s ease-out forwards',
+                        'line-grow': 'lineGrow 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'marquee': 'marquee 30s linear infinite',
+                    },
+                    keyframes: {
+                        reveal: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(60px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        lineGrow: {
+                            '0%': { transform: 'scaleX(0)' },
+                            '100%': { transform: 'scaleX(1)' },
+                        },
+                        marquee: {
+                            '0%': { transform: 'translateX(0)' },
+                            '100%': { transform: 'translateX(-50%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Source Sans 3', system-ui, sans-serif;
+            background: #fafaf8;
+            color: #0a0a0a;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .editorial-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            background: #0a0a0a;
+        }
+        
+        .editorial-grid > * {
+            background: #fafaf8;
+            padding: 3rem;
+        }
+        
+        .line-accent {
+            position: relative;
+        }
+        
+        .line-accent::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #c41e3a;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .line-accent:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .dropcap::first-letter {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 4rem;
+            font-weight: 700;
+            float: left;
+            line-height: 0.8;
+            margin-right: 0.5rem;
+            margin-top: 0.1rem;
+            color: #c41e3a;
+        }
+        
+        .editorial-rule {
+            height: 1px;
+            background: #0a0a0a;
+            width: 100%;
+        }
+        
+        .editorial-rule-thick {
+            height: 3px;
+            background: #0a0a0a;
+            width: 100%;
+        }
+        
+        .editorial-rule-accent {
+            height: 1px;
+            background: #c41e3a;
+            width: 100%;
+        }
+        
+        .text-balance {
+            text-wrap: balance;
+        }
+        
+        .hover-lift {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-4px);
+        }
+        
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+        .stagger-4 { animation-delay: 0.4s; }
+        .stagger-5 { animation-delay: 0.5s; }
+        
+        @media (prefers-reduced-motion: reduce) {
+            .animate-reveal,
+            .animate-slide-up,
+            .animate-fade-in {
+                opacity: 1;
+                transform: none;
+                animation: none;
+            }
+            
+            .hover-lift:hover {
+                transform: none;
+            }
+            
+            .line-accent::after {
+                transition: none;
+            }
+        }
+        
+        ::selection {
+            background: #c41e3a;
+            color: #fafaf8;
+        }
+        
+        .editorial-shadow {
+            box-shadow: 
+                0 1px 2px rgba(0, 0, 0, 0.04),
+                0 4px 8px rgba(0, 0, 0, 0.04),
+                0 16px 32px rgba(0, 0, 0, 0.04);
+        }
+        
+        .editorial-shadow-lg {
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.04),
+                0 8px 16px rgba(0, 0, 0, 0.06),
+                0 24px 48px rgba(0, 0, 0, 0.08);
+        }
+        
+        .noise-overlay {
+            position: relative;
+        }
+        
+        .noise-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .code-editorial {
+            background: #0a0a0a;
+            color: #fafaf8;
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.875rem;
+            line-height: 1.8;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .code-editorial::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: #c41e3a;
+        }
+        
+        .editorial-number {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 8rem;
+            font-weight: 900;
+            line-height: 1;
+            color: rgba(10, 10, 10, 0.05);
+            position: absolute;
+            top: -1rem;
+            left: -1rem;
+        }
+        
+        .editorial-aside {
+            border-left: 3px solid #0a0a0a;
+            padding-left: 1.5rem;
+            margin-left: 0;
+        }
+        
+        .editorial-aside-accent {
+            border-left: 3px solid #c41e3a;
+            padding-left: 1.5rem;
+            margin-left: 0;
+        }
+    </style>
+</head>
+<body class="noise-overlay">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-ink/10">
+        <div class="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
+            <a href="#" class="font-serif text-2xl font-bold tracking-tight">Playwright CLI</a>
+            
+            <div class="hidden md:flex items-center space-x-12">
+                <a href="#features" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">特性</a>
+                <a href="#installation" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">安装</a>
+                <a href="#commands" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">命令</a>
+                <a href="#configuration" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">配置</a>
+                <a href="https://github.com/microsoft/playwright-cli" class="font-sans text-sm font-semibold tracking-widest uppercase bg-ink text-paper px-6 py-3 hover:bg-gray-800 transition-colors duration-300">GitHub</a>
+            </div>
+            
+            <button id="mobile-menu-btn" class="md:hidden">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-ink/10 bg-paper">
+            <div class="px-8 py-6 space-y-4">
+                <a href="#features" class="block font-sans text-sm font-semibold tracking-widest uppercase">特性</a>
+                <a href="#installation" class="block font-sans text-sm font-semibold tracking-widest uppercase">安装</a>
+                <a href="#commands" class="block font-sans text-sm font-semibold tracking-widest uppercase">命令</a>
+                <a href="#configuration" class="block font-sans text-sm font-semibold tracking-widest uppercase">配置</a>
+                <a href="https://github.com/microsoft/playwright-cli" class="block font-sans text-sm font-semibold tracking-widest uppercase text-accent">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center pt-24 pb-16 px-8">
+        <div class="max-w-7xl mx-auto w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+                <div class="lg:col-span-7">
+                    <div class="animate-reveal">
+                        <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-8 block">具有 SKILLS 功能</span>
+                        
+                        <h1 class="font-serif text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-bold leading-[0.9] tracking-tight mb-12 text-balance">
+                            Playwright<br>
+                            <span class="italic font-normal">CLI</span>
+                        </h1>
+                        
+                        <div class="editorial-rule-thick mb-12"></div>
+                        
+                        <p class="font-sans text-xl md:text-2xl leading-relaxed max-w-xl text-gray-600 mb-12">
+                            现代编码代理的最佳选择。节省 token，避免将大型工具模式和冗长的无障碍树加载到模型上下文中。
+                        </p>
+                        
+                        <div class="flex flex-col sm:flex-row gap-6">
+                            <a href="#installation" class="font-sans text-sm font-semibold tracking-widest uppercase bg-ink text-paper px-10 py-5 hover:bg-gray-800 transition-colors duration-300 inline-flex items-center justify-center">
+                                开始使用
+                                <svg class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                </svg>
+                            </a>
+                            <a href="#features" class="font-sans text-sm font-semibold tracking-widest uppercase border-2 border-ink px-10 py-5 hover:bg-ink hover:text-paper transition-colors duration-300 inline-flex items-center justify-center">
+                                了解更多
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="lg:col-span-5 animate-reveal stagger-2">
+                    <div class="code-editorial">
+                        <div class="font-sans text-xs text-gray-400 mb-6 tracking-widest uppercase">Terminal</div>
+                        <div class="space-y-3">
+                            <div><span class="text-accent">$</span> npm install -g @playwright/cli@latest</div>
+                            <div><span class="text-accent">$</span> playwright-cli --help</div>
+                            <div class="text-gray-500"># 开始浏览器自动化之旅</div>
+                            <div><span class="text-accent">$</span> playwright-cli open https://example.com</div>
+                            <div><span class="text-accent">$</span> playwright-cli snapshot</div>
+                            <div><span class="text-accent">$</span> playwright-cli click e15</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Marquee -->
+    <section class="py-8 border-y border-ink/10 overflow-hidden bg-ink">
+        <div class="flex animate-marquee whitespace-nowrap">
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">节省 Token</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">CLI 优先</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">丰富命令</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">会话管理</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">可视化仪表板</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">灵活配置</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">节省 Token</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">CLI 优先</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">丰富命令</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">会话管理</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">可视化仪表板</span>
+            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            <span class="font-serif text-4xl font-bold italic text-paper mx-8">灵活配置</span>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-32 px-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Section Header -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-24">
+                <div class="lg:col-span-4 animate-reveal">
+                    <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-6 block">01</span>
+                    <h2 class="font-serif text-5xl md:text-6xl font-bold leading-[0.9] tracking-tight">
+                        为什么<br>选择
+                    </h2>
+                </div>
+                <div class="lg:col-span-8 flex items-end animate-reveal stagger-2">
+                    <div>
+                        <div class="editorial-rule mb-8"></div>
+                        <p class="font-sans text-xl md:text-2xl leading-relaxed text-gray-600 max-w-2xl">
+                            专为现代编码代理设计，提供最高效的浏览器自动化体验。CLI 调用更节省 token，适合高吞吐量编码代理。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Grid -->
+            <div class="editorial-grid">
+                <!-- Feature 1 -->
+                <div class="relative hover-lift animate-reveal stagger-1">
+                    <div class="editorial-number">01</div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-3xl font-bold mb-6">节省 Token</h3>
+                        <p class="font-sans text-lg leading-relaxed text-gray-600">
+                            不会强制将页面数据注入 LLM。避免将大型工具模式和冗长的无障碍树加载到模型上下文中，允许代理通过简洁、专用的命令执行操作。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="relative hover-lift animate-reveal stagger-2">
+                    <div class="editorial-number">02</div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-3xl font-bold mb-6">CLI 优先</h3>
+                        <p class="font-sans text-lg leading-relaxed text-gray-600">
+                            现代编码代理越来越倾向于将 CLI 工作流作为 SKILL 暴露，而非 MCP。CLI 调用更节省 token，适合需要在有限上下文窗口内平衡浏览器自动化的高吞吐量编码代理。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="relative hover-lift animate-reveal stagger-3">
+                    <div class="editorial-number">03</div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-3xl font-bold mb-6">丰富命令</h3>
+                        <p class="font-sans text-lg leading-relaxed text-gray-600">
+                            提供完整的浏览器自动化命令集：导航、交互、快照、存储、网络、开发者工具等，满足所有自动化需求。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="relative hover-lift animate-reveal stagger-4">
+                    <div class="editorial-number">04</div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-3xl font-bold mb-6">会话管理</h3>
+                        <p class="font-sans text-lg leading-relaxed text-gray-600">
+                            支持多个浏览器会话，持久化配置文件，cookie 和存储状态在会话内保持不变，支持命名会话管理。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="relative hover-lift animate-reveal stagger-5">
+                    <div class="editorial-number">05</div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-3xl font-bold mb-6">可视化仪表板</h3>
+                        <p class="font-sans text-lg leading-relaxed text-gray-600">
+                            使用 <code class="font-mono text-sm bg-cream px-2 py-1">playwright-cli show</code> 打开可视化仪表板，实时查看和控制所有正在运行的浏览器会话。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="relative hover-lift animate-reveal">
+                    <div class="editorial-number">06</div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-serif text-3xl font-bold mb-6">灵活配置</h3>
+                        <p class="font-sans text-lg leading-relaxed text-gray-600">
+                            支持 JSON 配置文件和环境变量配置，可自定义浏览器类型、启动选项、上下文选项、超时设置等。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Section -->
+    <section id="installation" class="py-32 px-8 bg-ink text-paper">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div class="lg:col-span-5 animate-reveal">
+                    <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-6 block">02</span>
+                    <h2 class="font-serif text-5xl md:text-6xl font-bold leading-[0.9] tracking-tight mb-12">
+                        快速<br>开始
+                    </h2>
+                    
+                    <div class="space-y-8">
+                        <div class="flex items-start">
+                            <span class="font-serif text-4xl font-bold text-accent mr-6 leading-none">1</span>
+                            <div>
+                                <h4 class="font-serif text-xl font-bold mb-2">全局安装</h4>
+                                <p class="font-sans text-gray-400">使用 npm 全局安装 Playwright CLI</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <span class="font-serif text-4xl font-bold text-accent mr-6 leading-none">2</span>
+                            <div>
+                                <h4 class="font-serif text-xl font-bold mb-2">安装 Skills</h4>
+                                <p class="font-sans text-gray-400">为 Claude Code、GitHub Copilot 等安装本地 skills</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start">
+                            <span class="font-serif text-4xl font-bold text-accent mr-6 leading-none">3</span>
+                            <div>
+                                <h4 class="font-serif text-xl font-bold mb-2">开始使用</h4>
+                                <p class="font-sans text-gray-400">让代理自动运行或手动执行命令</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 pt-8 border-t border-paper/10">
+                        <h4 class="font-sans text-sm font-semibold tracking-widest uppercase mb-4">系统要求</h4>
+                        <ul class="space-y-3 font-sans text-gray-400">
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Node.js 18 或更新版本
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Claude Code、GitHub Copilot 或任何其他编码代理
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="lg:col-span-7 animate-reveal stagger-2">
+                    <div class="code-editorial bg-paper/5 border-l-0">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-accent"></div>
+                        <div class="font-sans text-xs text-gray-500 mb-8 tracking-widest uppercase">Installation Guide</div>
+                        
+                        <div class="space-y-8">
+                            <div>
+                                <div class="text-gray-500 mb-2"># 全局安装</div>
+                                <div class="text-paper">npm install -g @playwright/cli@latest</div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-gray-500 mb-2"># 查看帮助</div>
+                                <div class="text-paper">playwright-cli --help</div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-gray-500 mb-2"># 安装 skills（用于 Claude Code、GitHub Copilot 等）</div>
+                                <div class="text-paper">playwright-cli install --skills</div>
+                            </div>
+                            
+                            <div class="pt-6 border-t border-paper/10">
+                                <div class="text-gray-500 mb-2"># 本地安装（如果全局命令不可用）</div>
+                                <div class="text-paper">npx playwright-cli --version</div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-gray-500 mb-2"># 使用本地版本</div>
+                                <div class="text-paper">npx playwright-cli open https://example.com</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 editorial-aside-accent text-paper">
+                        <p class="font-sans text-lg leading-relaxed text-gray-400">
+                            如果全局 <code class="font-mono text-accent">playwright-cli</code> 命令不可用，请尝试通过 <code class="font-mono text-accent">npx playwright-cli</code> 使用本地版本。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Commands Section -->
+    <section id="commands" class="py-32 px-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Section Header -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 mb-24">
+                <div class="lg:col-span-4 animate-reveal">
+                    <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-6 block">03</span>
+                    <h2 class="font-serif text-5xl md:text-6xl font-bold leading-[0.9] tracking-tight">
+                        命令<br>参考
+                    </h2>
+                </div>
+                <div class="lg:col-span-8 flex items-end animate-reveal stagger-2">
+                    <div>
+                        <div class="editorial-rule mb-8"></div>
+                        <p class="font-sans text-xl md:text-2xl leading-relaxed text-gray-600 max-w-2xl">
+                            提供全面的浏览器自动化命令，覆盖所有使用场景。从核心操作到高级功能，一应俱全。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Commands Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-ink">
+                <!-- Core Commands -->
+                <div class="bg-paper p-8 animate-reveal stagger-1">
+                    <h3 class="font-serif text-2xl font-bold mb-8 pb-4 border-b-2 border-ink">核心命令</h3>
+                    <div class="space-y-4">
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli open [url]</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">打开浏览器，可选择导航到 url</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli goto &lt;url&gt;</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">导航到指定 url</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli click &lt;ref&gt;</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">在网页上执行点击</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli type &lt;text&gt;</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">在可编辑元素中输入文本</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli snapshot</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">捕获页面快照以获取元素引用</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation Commands -->
+                <div class="bg-paper p-8 animate-reveal stagger-2">
+                    <h3 class="font-serif text-2xl font-bold mb-8 pb-4 border-b-2 border-accent">导航命令</h3>
+                    <div class="space-y-4">
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli go-back</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">返回上一页</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli go-forward</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">前进到下一页</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli reload</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">刷新当前页面</p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="font-serif text-2xl font-bold mt-12 mb-8 pb-4 border-b-2 border-accent">键盘命令</h3>
+                    <div class="space-y-4">
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli press &lt;key&gt;</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">按下键盘按键</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli keydown &lt;key&gt;</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">按下键盘按键（不释放）</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Storage Commands -->
+                <div class="bg-paper p-8 animate-reveal stagger-3">
+                    <h3 class="font-serif text-2xl font-bold mb-8 pb-4 border-b-2 border-ink">存储命令</h3>
+                    <div class="space-y-4">
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli state-save</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">保存存储状态</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli cookie-list</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">列出 cookies</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli localstorage-list</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">列出 localStorage 条目</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli sessionstorage-list</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">列出 sessionStorage 条目</p>
+                        </div>
+                    </div>
+                    
+                    <h3 class="font-serif text-2xl font-bold mt-12 mb-8 pb-4 border-b-2 border-ink">开发者工具</h3>
+                    <div class="space-y-4">
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli console</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">列出控制台消息</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli network</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">列出所有网络请求</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli show</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">打开可视化仪表板</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-16 text-center animate-reveal">
+                <a href="https://github.com/microsoft/playwright-cli#commands" class="font-sans text-sm font-semibold tracking-widest uppercase border-2 border-ink px-10 py-5 hover:bg-ink hover:text-paper transition-colors duration-300 inline-flex items-center">
+                    查看完整命令文档
+                    <svg class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Configuration Section -->
+    <section id="configuration" class="py-32 px-8 bg-cream">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div class="lg:col-span-5 animate-reveal">
+                    <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-6 block">04</span>
+                    <h2 class="font-serif text-5xl md:text-6xl font-bold leading-[0.9] tracking-tight mb-12">
+                        灵活<br>配置
+                    </h2>
+                    
+                    <p class="font-sans text-xl leading-relaxed text-gray-600 mb-12">
+                        支持 JSON 配置文件和环境变量配置，满足各种定制需求。
+                    </p>
+                    
+                    <div class="space-y-8">
+                        <div class="editorial-aside">
+                            <h4 class="font-serif text-xl font-bold mb-3">配置文件</h4>
+                            <p class="font-sans text-gray-600">
+                                使用 <code class="font-mono text-sm bg-paper px-2 py-1">--config</code> 选项指定配置文件，或使用默认配置 <code class="font-mono text-sm bg-paper px-2 py-1">.playwright/cli.config.json</code>
+                            </p>
+                        </div>
+                        
+                        <div class="editorial-aside-accent">
+                            <h4 class="font-serif text-xl font-bold mb-3">环境变量</h4>
+                            <p class="font-sans text-gray-600">
+                                通过环境变量配置浏览器类型、无头模式、视口大小等，无需修改配置文件。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="lg:col-span-7 animate-reveal stagger-2">
+                    <div class="bg-paper p-8 editorial-shadow-lg">
+                        <div class="flex items-center justify-between mb-8">
+                            <h3 class="font-serif text-2xl font-bold">配置示例</h3>
+                            <span class="font-mono text-sm text-gray-400">config.json</span>
+                        </div>
+                        
+                        <div class="code-editorial bg-ink">
+                            <pre class="text-sm leading-relaxed"><code>{
+  <span class="text-accent">"browser"</span>: {
+    <span class="text-accent">"browserName"</span>: <span class="text-paper">"chromium"</span>,
+    <span class="text-accent">"headless"</span>: <span class="text-accent">false</span>,
+    <span class="text-accent">"launchOptions"</span>: {
+      <span class="text-accent">"slowMo"</span>: <span class="text-paper">100</span>
+    },
+    <span class="text-accent">"contextOptions"</span>: {
+      <span class="text-accent">"viewport"</span>: {
+        <span class="text-accent">"width"</span>: <span class="text-paper">1280</span>,
+        <span class="text-accent">"height"</span>: <span class="text-paper">720</span>
+      }
+    }
+  },
+  <span class="text-accent">"outputDir"</span>: <span class="text-paper">"./output"</span>,
+  <span class="text-accent">"console"</span>: {
+    <span class="text-accent">"level"</span>: <span class="text-paper">"info"</span>
+  },
+  <span class="text-accent">"timeouts"</span>: {
+    <span class="text-accent">"action"</span>: <span class="text-paper">5000</span>,
+    <span class="text-accent">"navigation"</span>: <span class="text-paper">60000</span>
+  }
+}</code></pre>
+                        </div>
+                        
+                        <div class="mt-8 pt-8 border-t border-ink/10">
+                            <h4 class="font-sans text-sm font-semibold tracking-widest uppercase mb-4">常用环境变量</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <code class="font-mono text-sm text-accent">PLAYWRIGHT_MCP_BROWSER</code>
+                                    <p class="font-sans text-sm text-gray-500 mt-1">浏览器类型</p>
+                                </div>
+                                <div>
+                                    <code class="font-mono text-sm text-accent">PLAYWRIGHT_MCP_HEADLESS</code>
+                                    <p class="font-sans text-sm text-gray-500 mt-1">无头模式</p>
+                                </div>
+                                <div>
+                                    <code class="font-mono text-sm text-accent">PLAYWRIGHT_MCP_VIEWPORT_SIZE</code>
+                                    <p class="font-sans text-sm text-gray-500 mt-1">视口大小</p>
+                                </div>
+                                <div>
+                                    <code class="font-mono text-sm text-accent">PLAYWRIGHT_MCP_TIMEOUT_ACTION</code>
+                                    <p class="font-sans text-sm text-gray-500 mt-1">操作超时</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-32 px-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Section Header -->
+            <div class="text-center mb-24 animate-reveal">
+                <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-6 block">05</span>
+                <h2 class="font-serif text-5xl md:text-6xl font-bold leading-[0.9] tracking-tight mb-8">
+                    实际演示
+                </h2>
+                <div class="editorial-rule-accent max-w-xs mx-auto mb-8"></div>
+                <p class="font-sans text-xl text-gray-600 max-w-2xl mx-auto">
+                    看看 Playwright CLI 如何在实际场景中工作
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-ink">
+                <!-- Demo 1 -->
+                <div class="bg-paper p-12 animate-reveal stagger-1">
+                    <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-6 block">示例 01</span>
+                    <h3 class="font-serif text-3xl font-bold mb-8">测试 Todo 应用</h3>
+                    <p class="font-sans text-lg text-gray-600 mb-8 leading-relaxed">
+                        使用 Playwright CLI 测试待办事项应用的添加功能
+                    </p>
+                    
+                    <div class="code-editorial bg-ink">
+                        <div class="font-sans text-xs text-gray-500 mb-6 tracking-widest uppercase">Demo Commands</div>
+                        <div class="space-y-3 text-sm">
+                            <div><span class="text-gray-500"># 打开待办事项应用</span></div>
+                            <div>playwright-cli open https://demo.playwright.dev/todomvc/</div>
+                            <div class="mt-4"><span class="text-gray-500"># 添加待办事项</span></div>
+                            <div>playwright-cli type "Buy groceries"</div>
+                            <div>playwright-cli press Enter</div>
+                            <div>playwright-cli type "Water flowers"</div>
+                            <div>playwright-cli press Enter</div>
+                            <div class="mt-4"><span class="text-gray-500"># 勾选待办事项</span></div>
+                            <div>playwright-cli check e21</div>
+                            <div>playwright-cli check e35</div>
+                            <div class="mt-4"><span class="text-gray-500"># 截图保存</span></div>
+                            <div>playwright-cli screenshot</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Demo 2 -->
+                <div class="bg-paper p-12 animate-reveal stagger-2">
+                    <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-6 block">示例 02</span>
+                    <h3 class="font-serif text-3xl font-bold mb-8">会话管理</h3>
+                    <p class="font-sans text-lg text-gray-600 mb-8 leading-relaxed">
+                        管理多个浏览器会话，实现持久化配置
+                    </p>
+                    
+                    <div class="code-editorial bg-ink">
+                        <div class="font-sans text-xs text-gray-500 mb-6 tracking-widest uppercase">Session Management</div>
+                        <div class="space-y-3 text-sm">
+                            <div><span class="text-gray-500"># 打开默认会话</span></div>
+                            <div>playwright-cli open https://playwright.dev</div>
+                            <div class="mt-4"><span class="text-gray-500"># 打开命名会话（持久化）</span></div>
+                            <div>playwright-cli -s=example open https://example.com --persistent</div>
+                            <div class="mt-4"><span class="text-gray-500"># 列出所有会话</span></div>
+                            <div>playwright-cli list</div>
+                            <div class="mt-4"><span class="text-gray-500"># 使用环境变量指定会话</span></div>
+                            <div>PLAYWRIGHT_CLI_SESSION=todo-app claude .</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 editorial-aside">
+                        <h4 class="font-serif text-lg font-bold mb-3">会话管理命令</h4>
+                        <ul class="font-sans text-gray-600 space-y-2">
+                            <li><code class="font-mono text-sm text-accent">playwright-cli list</code> - 列出所有会话</li>
+                            <li><code class="font-mono text-sm text-accent">playwright-cli close-all</code> - 关闭所有浏览器</li>
+                            <li><code class="font-mono text-sm text-accent">playwright-cli kill-all</code> - 强制终止所有进程</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Preview -->
+            <div class="mt-px animate-reveal">
+                <div class="bg-ink text-paper p-12">
+                    <div class="text-center mb-12">
+                        <h3 class="font-serif text-3xl font-bold mb-4">可视化仪表板</h3>
+                        <p class="font-sans text-gray-400 max-w-2xl mx-auto">
+                            使用 <code class="font-mono text-accent">playwright-cli show</code> 打开可视化仪表板，实时查看和控制所有正在运行的浏览器会话
+                        </p>
+                    </div>
+                    
+                    <!-- Real Dashboard Image -->
+                    <div class="relative mb-12 border border-paper/10 overflow-hidden">
+                        <img 
+                            src="https://github.com/user-attachments/assets/99df739d-106a-4520-b004-bb315db41da7" 
+                            alt="Playwright CLI 可视化仪表板 - 显示多个浏览器会话的实时预览和控制界面"
+                            class="w-full h-auto"
+                            loading="lazy"
+                        >
+                        <div class="absolute inset-0 bg-gradient-to-t from-ink/20 to-transparent pointer-events-none"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="border-l-2 border-accent pl-6">
+                            <h4 class="font-serif text-lg font-bold mb-3">会话网格</h4>
+                            <p class="font-sans text-gray-400 text-sm">显示按工作区分组的所有活跃会话，每个会话都有实时截屏预览、会话名称、当前 URL 和页面标题</p>
+                        </div>
+                        <div class="border-l-2 border-accent pl-6">
+                            <h4 class="font-serif text-lg font-bold mb-3">会话详情</h4>
+                            <p class="font-sans text-gray-400 text-sm">显示所选会话的实时视图，包含标签栏、导航控制（后退、前进、刷新、地址栏）和完整远程控制</p>
+                        </div>
+                        <div class="border-l-2 border-accent pl-6">
+                            <h4 class="font-serif text-lg font-bold mb-3">远程控制</h4>
+                            <p class="font-sans text-gray-400 text-sm">点击视口可接管鼠标和键盘输入；按 Escape 释放。可在网格中关闭正在运行的会话或删除不活跃会话的数据</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-32 px-8 bg-ink text-paper">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="animate-reveal">
+                <span class="font-sans text-sm font-semibold tracking-widest uppercase text-accent mb-8 block">准备好开始了吗？</span>
+                
+                <h2 class="font-serif text-5xl md:text-6xl font-bold leading-[0.9] tracking-tight mb-12">
+                    立即体验
+                </h2>
+                
+                <div class="editorial-rule-accent max-w-xs mx-auto mb-12"></div>
+                
+                <p class="font-sans text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+                    立即安装 Playwright CLI，体验最高效的浏览器自动化工具
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+                    <a href="https://github.com/microsoft/playwright-cli" class="font-sans text-sm font-semibold tracking-widest uppercase bg-paper text-ink px-10 py-5 hover:bg-gray-100 transition-colors duration-300 inline-flex items-center">
+                        查看 GitHub
+                        <svg class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </a>
+                    <a href="#installation" class="font-sans text-sm font-semibold tracking-widest uppercase border-2 border-paper px-10 py-5 hover:bg-paper hover:text-ink transition-colors duration-300 inline-flex items-center">
+                        安装指南
+                    </a>
+                </div>
+                
+                <div class="code-editorial bg-paper/5 border-l-0 max-w-xl mx-auto">
+                    <div class="text-sm">
+                        <span class="text-accent">$</span> npm install -g @playwright/cli@latest<br>
+                        <span class="text-accent">$</span> playwright-cli --help
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-16 px-8 border-t border-ink/10">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+                <div class="md:col-span-5">
+                    <span class="font-serif text-2xl font-bold">Playwright CLI</span>
+                    <p class="font-sans text-gray-500 mt-4 max-w-md leading-relaxed">
+                        具有 SKILLS 功能的 Playwright CLI。现代编码代理的最佳选择，提供最高效的浏览器自动化体验。
+                    </p>
+                    <div class="flex space-x-6 mt-8">
+                        <a href="https://github.com/microsoft/playwright-cli" class="text-gray-400 hover:text-ink transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
+                            </svg>
+                        </a>
+                        <a href="https://playwright.dev" class="text-gray-400 hover:text-ink transition-colors duration-300">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-3">
+                    <h4 class="font-sans text-sm font-semibold tracking-widest uppercase mb-6">文档</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#installation" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">安装指南</a></li>
+                        <li><a href="#commands" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">命令参考</a></li>
+                        <li><a href="#configuration" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">配置选项</a></li>
+                        <li><a href="#demo" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">演示示例</a></li>
+                    </ul>
+                </div>
+                
+                <div class="md:col-span-4">
+                    <h4 class="font-sans text-sm font-semibold tracking-widest uppercase mb-6">资源</h4>
+                    <ul class="space-y-4">
+                        <li><a href="https://github.com/microsoft/playwright-cli" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">GitHub</a></li>
+                        <li><a href="https://playwright.dev" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">Playwright 文档</a></li>
+                        <li><a href="https://github.com/microsoft/playwright-mcp" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">Playwright MCP</a></li>
+                        <li><a href="https://github.com/microsoft/playwright-cli/issues" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">问题反馈</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-16 pt-8 border-t border-ink/10 flex flex-col md:flex-row justify-between items-center">
+                <p class="font-sans text-sm text-gray-400">
+                    © 2026 Playwright CLI. 基于 MIT 许可证开源。
+                </p>
+                <a href="#" class="font-sans text-sm text-gray-400 hover:text-ink transition-colors duration-300 mt-4 md:mt-0">
+                    返回顶部 ↑
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" class="fixed bottom-8 right-8 w-12 h-12 bg-ink text-paper flex items-center justify-center opacity-0 invisible transition-all duration-300 hover:bg-gray-800 z-50">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+    </button>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Close mobile menu when clicking a link
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        });
+        
+        // Back to top button
+        const backToTopBtn = document.getElementById('back-to-top');
+        
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 500) {
+                backToTopBtn.classList.remove('opacity-0', 'invisible');
+                backToTopBtn.classList.add('opacity-100', 'visible');
+            } else {
+                backToTopBtn.classList.remove('opacity-100', 'visible');
+                backToTopBtn.classList.add('opacity-0', 'invisible');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+        
+        // Animate on scroll
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animationPlayState = 'running';
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.animate-reveal').forEach(el => {
+            el.style.animationPlayState = 'paused';
+            observer.observe(el);
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+        
+        // Add prefers-reduced-motion check
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('.animate-reveal').forEach(el => {
+                el.style.opacity = '1';
+                el.style.transform = 'none';
+                el.style.animation = 'none';
+            });
+        }
+    </script>
+</body>
+</html>
