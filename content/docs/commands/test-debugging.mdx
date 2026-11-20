@@ -1,0 +1,88 @@
+---
+title: 测试调试
+description: 用 CLI 附加到被暂停的 Playwright 测试，以交互式方式定位并修复测试失败。
+---
+
+使用 CLI 交互式地调试 Playwright 测试失败。
+
+## 连接到已暂停的测试
+
+用 `--debug=cli` 运行测试。请放到后台执行——测试会保持暂停状态，并在你排查期间一直占用浏览器。
+
+```bash
+PLAYWRIGHT_HTML_OPEN=never npx playwright test tests/checkout.spec.ts --debug=cli
+```
+
+测试会在开头暂停，并打印出要附加的 session 名称：
+
+```txt
+### The test is currently paused at the start
+
+### Debugging Instructions
+- Run "playwright-cli attach tw-a3f19c" to attach to this test
+```
+
+```bash
+playwright-cli attach tw-a3f19c
+```
+
+`PLAYWRIGHT_HTML_OPEN=never` 可以防止运行结束后自动弹出 HTML 报告。
+
+## 探索页面
+
+```bash
+playwright-cli snapshot                 # see current state
+playwright-cli find "Place order"       # locate one element on a big page
+playwright-cli console error            # check for errors
+playwright-cli requests --filter="/api/"
+playwright-cli eval "() => document.title"
+playwright-cli screenshot --filename=debug-state.png
+```
+
+## 控制执行
+
+| Command | Description |
+| --- | --- |
+| `resume` | 继续运行 |
+| `step-over` | 在测试中单步越过下一个调用 |
+| `pause-at <file>:<line>` | 运行到指定位置并在那里暂停 |
+
+```bash
+playwright-cli pause-at checkout.spec.ts:42
+playwright-cli step-over
+playwright-cli resume
+```
+
+由于测试是在最开始就暂停的，`pause-at` 通常是最快的进入方式：直接跳到最可能出问题的代码行。
+
+## 阅读生成的代码
+
+每个 `playwright-cli` 操作都会打印等价的 Playwright TypeScript。这就是你贴回测试里的修复内容——大多数情况下需要更新的是某个 locator 或某个断言，但有时也确实是应用本身的 bug。参见[代码生成与高亮](/docs/commands/codegen)。
+
+## 工作流：排查不稳定（flaky）的测试
+
+```bash
+# 1. Run the failing test in the background
+PLAYWRIGHT_HTML_OPEN=never npx playwright test tests/checkout.spec.ts --debug=cli
+
+# 2. Connect
+playwright-cli attach tw-a3f19c
+
+# 3. Record a trace
+playwright-cli tracing-start
+
+# 4. Run to the suspect line
+playwright-cli pause-at tests/checkout.spec.ts:42
+playwright-cli snapshot
+playwright-cli console
+playwright-cli requests
+
+# 5. Investigate at the failing step
+playwright-cli screenshot --filename=before-failure.png
+playwright-cli eval "() => document.querySelector('.spinner')?.style.display"
+
+# 6. Save trace, then stop the background test run and re-run it
+playwright-cli tracing-stop
+```
+
+排查完成后停止后台的测试运行，然后重新运行测试以确认修复生效。

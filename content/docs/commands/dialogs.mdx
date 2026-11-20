@@ -1,0 +1,88 @@
+---
+title: 对话框
+description: 处理阻塞页面交互的浏览器对话框（alert、confirm、prompt）以及文件选择器。
+---
+
+用于处理会阻塞页面交互的浏览器对话框（alert、confirm、prompt）。
+
+## 命令（Commands）
+
+| 命令 | 说明 |
+| --- | --- |
+| `dialog-accept [prompt]` | 接受（确认）对话框，可选地提供 prompt 文本 |
+| `dialog-dismiss` | 取消（dismiss）对话框 |
+
+## 对话框如何被报告
+
+在对话框处于打开状态期间，每条命令都会在 `Modal state` 段落中报告它，并告诉你用哪个命令可以清除它：
+
+```txt
+### Modal state
+- ["confirm" dialog with message "Are you sure you want to delete this?"]: can be handled by dialog-accept or dialog-dismiss
+```
+
+> **注意：** 在该对话框被处理之前，其他任何操作都无法继续执行。
+
+## Alert 对话框
+
+```bash
+$ playwright-cli click e5
+### Modal state
+- ["alert" dialog with message "Item has been deleted."]: can be handled by dialog-accept or dialog-dismiss
+
+$ playwright-cli dialog-accept
+```
+
+## Confirm 对话框
+
+```bash
+$ playwright-cli click e10
+### Modal state
+- ["confirm" dialog with message "Are you sure you want to delete this?"]: can be handled by dialog-accept or dialog-dismiss
+
+# Accept (OK)
+$ playwright-cli dialog-accept
+
+# Or dismiss (Cancel)
+$ playwright-cli dialog-dismiss
+```
+
+## Prompt 对话框
+
+```bash
+$ playwright-cli click e8
+### Modal state
+- ["prompt" dialog with message "Enter your name:"]: can be handled by dialog-accept or dialog-dismiss
+
+# Accept with text
+$ playwright-cli dialog-accept "Alice"
+
+# Or dismiss (cancels the prompt)
+$ playwright-cli dialog-dismiss
+```
+
+## 文件选择器
+
+文件选择器（file chooser）的报告方式与对话框相同，但要用 [`upload`](/docs/commands/interaction) 而不是 dialog 系列命令来清除它：
+
+```txt
+### Modal state
+- [File chooser]: can be handled by upload
+```
+
+```bash
+playwright-cli upload /abs/path/to/document.pdf
+```
+
+## 工作流
+
+```bash
+$ playwright-cli click e12
+### Modal state
+- ["confirm" dialog with message "Discard unsaved changes?"]: can be handled by dialog-accept or dialog-dismiss
+
+$ playwright-cli dialog-accept
+
+$ playwright-cli snapshot
+# Page now shows updated state after dialog was accepted
+```

@@ -1,0 +1,78 @@
+---
+title: 追踪
+description: 记录执行追踪（trace），它会捕获每一步的 DOM 快照、截图、网络活动和控制台日志。
+---
+
+记录执行追踪（trace），它会在每一步捕获 DOM 快照、截图、网络活动和控制台日志。
+
+## 命令
+
+```bash
+playwright-cli tracing-start            # start recording
+playwright-cli tracing-stop             # stop and save
+```
+
+## 基本录制
+
+```bash
+playwright-cli tracing-start
+playwright-cli goto https://example.com
+playwright-cli click e5
+playwright-cli fill e3 "test"
+playwright-cli tracing-stop
+```
+
+这两条命令都会打印它们写入的路径：
+
+```txt
+Trace recording stopped.
+[Trace](.playwright-cli/traces/trace-1771097322679.trace)
+[Network log](.playwright-cli/traces/trace-1771097322679.network)
+[Resources](.playwright-cli/traces/resources)
+```
+
+追踪是实时写入的——`tracing-start` 一执行，文件链接就会出现，因此你可以在自动化仍在运行时打开查看器。
+
+| 文件 | 内容 |
+| --- | --- |
+| `trace-{timestamp}.trace` | 操作、每一步前后的 DOM 快照、截图、控制台消息、耗时 |
+| `trace-{timestamp}.network` | 每个请求与响应，包含 header、请求体和耗时 |
+| `resources/` | 重放页面所需的缓存图片、字体、样式表和脚本 |
+
+## 查看追踪
+
+```bash
+npx playwright show-trace .playwright-cli/traces/trace-1771097322679.trace
+```
+
+[Trace Viewer](https://playwright.dev/docs/trace-viewer-intro) 会以时间线形式展示每个操作，并附带前后两次的 DOM 快照、截图、网络请求与响应、控制台消息以及耗时。
+
+## 工作流：调试失败的场景
+
+```bash
+# Start tracing
+playwright-cli tracing-start
+
+# Walk through the failing flow
+playwright-cli goto https://store.example.com/checkout
+playwright-cli fill e10 "4111111111111111"
+playwright-cli click e15
+
+# Check what went wrong
+playwright-cli snapshot
+# - text: "Payment processing failed"
+
+playwright-cli console error
+# [ERROR] POST /api/payment 422: {"error":"Card number must include expiry"}
+
+# Save trace for analysis
+playwright-cli tracing-stop
+```
+
+## 清理
+
+追踪文件会占用大量磁盘空间：
+
+```bash
+find .playwright-cli/traces -mtime +7 -delete
+```

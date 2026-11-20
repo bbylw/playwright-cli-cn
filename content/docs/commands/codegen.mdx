@@ -1,0 +1,101 @@
+---
+title: 代码生成与高亮
+description: 利用 playwright-cli 每次操作生成的 Playwright 代码来编写测试，并支持录制用户操作、生成 locator 以及高亮元素。
+---
+
+每个 `playwright-cli` 操作都会打印出它刚刚执行的 Playwright 代码。这些生成的代码正是编写测试的原材料——本页介绍这部分内容，以及与编写测试相关的其他命令：录制用户手动完成的流程、把 ref 转换为 locator，以及在页面上高亮元素。
+
+## 生成的代码
+
+```bash
+$ playwright-cli fill e1 "user@example.com"
+### Ran Playwright code
+await page.getByRole('textbox', { name: 'Email' }).fill('user@example.com');
+### Page
+- Page URL: https://example.com/login
+...
+
+$ playwright-cli click e3
+### Ran Playwright code
+await page.getByRole('button', { name: 'Sign In' }).click();
+```
+
+把这些代码行收集成一个测试，再加上断言：
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+test('login flow', async ({ page }) => {
+  await page.goto('https://example.com/login');
+  await page.getByRole('textbox', { name: 'Email' }).fill('user@example.com');
+  await page.getByRole('textbox', { name: 'Password' }).fill('password123');
+  await page.getByRole('button', { name: 'Sign In' }).click();
+
+  await expect(page).toHaveURL(/.*dashboard/);
+});
+```
+
+生成的代码优先使用基于 role 的 locator，相比 CSS 选择器，它在页面结构变化后能更好地存活下来。在[配置文件](/docs/configuration)中把 `codegen` 设置为 `python`、`java` 或 `csharp`，可以输出对应语言而不是 TypeScript；设置为 `none` 则完全去掉代码部分。
+
+## 录制用户操作
+
+当某个流程演示出来比描述出来更容易时——一次拖拽交互、一个 canvas 手势、一次需要硬件密钥的登录——就把浏览器交给用户，并记录他们的操作。
+
+```bash
+playwright-cli open https://example.com --headed
+playwright-cli recording-start
+# the user performs the flow in the browser window
+playwright-cli recording-stop
+```
+
+`recording-stop` 会把用户做过的所有操作以 Playwright 代码的形式打印出来：
+
+```txt
+Recording stopped. Recorded actions:
+
+await page.getByRole('link', { name: 'Products' }).click();
+await page.getByRole('textbox', { name: 'Search' }).fill('laptop');
+await page.getByRole('textbox', { name: 'Search' }).press('Enter');
+```
+
+`recording-start` 会把浏览器窗口提到最前面，因此请在 headed（有界面）session 上运行它。
+
+## 生成 locator
+
+`generate-locator` 会把一个 ref 或选择器转换为你在测试中会写出的 locator：
+
+```bash
+$ playwright-cli generate-locator e5
+# getByRole('button', { name: 'Add to cart' })
+
+$ playwright-cli --raw generate-locator "#checkout button.primary"
+# getByRole('button', { name: 'Checkout' })
+```
+
+当你需要底层属性——`id`、`data-testid`、class——而 snapshot 中没有展示时，把它与 [`eval`](/docs/commands/console-eval) 配合使用：
+
+```bash
+playwright-cli eval "el => el.getAttribute('data-testid')" e5
+```
+
+## 高亮元素
+
+`highlight` 会在元素周围绘制一层持久化的覆盖标记。它适合用来向用户展示你指的是哪个元素，也适合让截图或[录制视频](/docs/commands/video-recording)中的目标更加醒目。
+
+```bash
+playwright-cli highlight e5
+playwright-cli highlight e5 --style="outline: 3px dashed red"
+
+playwright-cli highlight e5 --hide     # hide one element's highlight
+playwright-cli highlight --hide        # hide every highlight on the page
+```
+
+高亮只是覆盖层，并不会改变页面：它们不会拦截点击，因此你可以在保持高亮显示的同时继续与页面交互。
+
+## 测试生成工作流
+
+安装好的 [skill](/docs/skills) 记录了更完整的 plan（规划）→ generate（生成）→ heal（修复）循环，它建立在同一套机制之上：
+
+1. **Plan** — 用 CLI 探索应用，并写一个 spec 文件描述要测试什么。
+2. **Generate** — 逐步重放该 spec，把生成的代码收集到测试文件中。
+3. **Heal** — 用 `--debug=cli` 运行失败的测试，[attach](/docs/commands/test-debugging) 到已暂停的页面，然后用刚刚生成的代码修复过时的 locator 或断言。

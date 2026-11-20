@@ -1,0 +1,48 @@
+---
+title: Skills
+description: 可安装的 skill 为编程智能体提供 Playwright CLI 的结构化参考文档。
+---
+
+Skill（技能）用来教会编程智能体如何高效地使用 `playwright-cli`，它是一份结构化的参考文档，智能体可以自行发现并使用。
+
+## 安装 skills
+
+```bash
+playwright-cli install --skills            # Claude Code 布局（默认）
+playwright-cli install --skills=agents     # .agents/skills 布局
+playwright-cli install --skills -g         # 安装到主目录
+```
+
+skill 会被复制到当前工作区的 `.claude/skills/playwright-cli`（或 `.agents/skills/playwright-cli`）。使用 `--global`（别名 `-g`）时，它会被放到 `~/.claude/skills` 或 `~/.agents/skills`，从而在所有项目中可用。
+
+## skill 提供什么
+
+`SKILL.md` 覆盖了命令的全貌 —— 核心交互、快照（snapshot）与 ref、会话、原始输出，以及 `open`/`attach` 的参数 —— 并链接到面向具体任务的详细参考指南：
+
+- **运行与调试 Playwright 测试** —— 运行、调试并管理 Playwright 测试套件
+- **请求拦截（Request mocking）** —— 拦截并模拟网络请求
+- **运行 Playwright 代码** —— 用 `run-code` 执行任意 Playwright 脚本
+- **浏览器会话管理** —— 管理多个浏览器会话，执行 attach 与 detach
+- **存储状态（cookies、localStorage）** —— 持久化与恢复浏览器状态
+- **测试生成** —— 规划、生成并修复（heal）Playwright 测试
+- **Tracing** —— 录制并查看执行轨迹
+- **视频录制** —— 录制浏览器会话视频，包括按脚本制作的展示视频
+- **检查元素属性** —— 获取快照中看不到的元素属性
+
+## 不安装 skill 的使用方式
+
+不安装 skill 也可以使用 `playwright-cli`。直接把智能体指向 CLI，让它自行发现命令即可：
+
+```txt
+Test the "add todo" flow on https://demo.playwright.dev/todomvc using playwright-cli.
+Check playwright-cli --help for available commands.
+```
+
+## 支持的智能体
+
+Skill 适用于：
+
+- Claude Code
+- GitHub Copilot
+- Cursor
+- 任何支持本地安装 skill 的编程智能体

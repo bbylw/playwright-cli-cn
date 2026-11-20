@@ -1,0 +1,137 @@
+---
+title: 存储与认证
+description: 管理 cookie、localStorage 与 sessionStorage，并保存/恢复完整浏览器状态以持久化登录。
+---
+
+用于管理 cookie、localStorage、sessionStorage，并保存/恢复完整的浏览器状态，从而实现认证信息的持久化。
+
+## 存储状态（storage state：cookies + localStorage）
+
+把完整的浏览器状态（cookies + localStorage）保存到单个文件中，并在之后恢复。这是跨会话持久化认证状态的主要方式。
+
+```bash
+playwright-cli state-save               # save to storage-state-{timestamp}.json
+playwright-cli state-save auth.json     # save to a named file
+playwright-cli state-load auth.json     # restore from file
+```
+
+该文件包含浏览器访问过的每个源（origin）的 cookie 以及 localStorage。**切勿把这些文件提交到版本库** —— 它们带有仍然有效的认证凭据。
+
+### 工作流：保存登录状态，下次直接跳过登录
+
+```bash
+# Login once
+playwright-cli open https://app.example.com/login
+playwright-cli fill e3 "user@example.com"
+playwright-cli fill e5 "password123"
+playwright-cli click e7
+
+# Save authenticated state
+playwright-cli state-save auth.json
+
+# Later, skip login entirely
+playwright-cli state-load auth.json
+playwright-cli goto https://app.example.com/dashboard
+# Already logged in!
+```
+
+## Cookie
+
+| 命令 | 说明 |
+| --- | --- |
+| `cookie-list [--domain] [--path]` | 列出 cookie（可选按 domain 或 path 过滤） |
+| `cookie-get <name>` | 获取指定名称的 cookie |
+| `cookie-set <name> <value> [options]` | 设置 cookie |
+| `cookie-delete <name>` | 删除 cookie |
+| `cookie-clear` | 清除所有 cookie |
+
+### cookie-set 选项
+
+| 选项 | 说明 |
+| --- | --- |
+| `--domain=<domain>` | Cookie 的 domain |
+| `--path=<path>` | Cookie 的 path（默认：`/`） |
+| `--expires=<timestamp>` | 以 Unix 时间戳表示的过期时间 |
+| `--httpOnly` | HTTP-only 标志 |
+| `--secure` | Secure 标志 |
+| `--sameSite=<value>` | `Strict`、`Lax` 或 `None` |
+
+```bash
+$ playwright-cli cookie-list
+# Name          Value       Domain            HttpOnly  Secure  Expires
+# session_id    abc123      .example.com      true      true    2024-12-31
+# theme         dark        .example.com      false     false   Session
+
+$ playwright-cli cookie-list --domain=.github.com
+$ playwright-cli cookie-get session_id
+$ playwright-cli cookie-set theme light
+$ playwright-cli cookie-set session abc123 --domain=.example.com --secure --httpOnly
+$ playwright-cli cookie-set remember_me token123 --expires=1893456000 --sameSite=Lax
+$ playwright-cli cookie-delete session_id
+$ playwright-cli cookie-clear
+```
+
+### 工作流：通过清除 cookie 测试登出
+
+```bash
+playwright-cli cookie-clear
+playwright-cli reload
+playwright-cli snapshot
+# - heading "Sign in" [level=1]
+# - textbox "Email" [ref=e3]
+```
+
+## localStorage
+
+| 命令 | 说明 |
+| --- | --- |
+| `localstorage-list` | 列出所有键值对 |
+| `localstorage-get <key>` | 按键获取值 |
+| `localstorage-set <key> <value>` | 设置值 |
+| `localstorage-delete <key>` | 删除某个键 |
+| `localstorage-clear` | 清除全部 |
+
+```bash
+$ playwright-cli localstorage-list
+# Key                Value
+# user_preferences   {"theme":"dark","lang":"en"}
+# onboarding_done    true
+
+$ playwright-cli localstorage-get user_preferences
+# {"theme":"dark","lang":"en"}
+
+$ playwright-cli localstorage-set onboarding_done "false"
+$ playwright-cli reload
+# Onboarding wizard appears
+```
+
+## sessionStorage
+
+使用 `sessionstorage-` 前缀即可得到一一对应的同名命令。标签页关闭时这些数据会被清除。
+
+```bash
+playwright-cli sessionstorage-list
+playwright-cli sessionstorage-get <key>
+playwright-cli sessionstorage-set <key> <value>
+playwright-cli sessionstorage-delete <key>
+playwright-cli sessionstorage-clear
+```
+
+## 批量操作
+
+单键命令已经覆盖了常见场景。若需要更批量化的操作 —— 一次性添加多个 cookie，或写入一批 localStorage 键 —— 请使用 `run-code`：
+
+```bash
+playwright-cli run-code "async page => {
+  await page.context().addCookies([
+    { name: 'session_id', value: 'sess_abc123', domain: 'example.com', path: '/', httpOnly: true },
+    { name: 'preferences', value: JSON.stringify({ theme: 'dark' }), domain: 'example.com', path: '/' }
+  ]);
+}"
+```
+
+IndexedDB 没有专门的命令，这类需求同样可以借助 `run-code` 完成：
+
+```bash
+playwright-cli run-code "async page => page.evaluate(() => indexedDB.databases())"
+```

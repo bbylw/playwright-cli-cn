@@ -1,0 +1,157 @@
+---
+title: 会话与仪表盘
+description: 用命名 session 隔离多个浏览器实例、控制配置文件的持久化方式，并通过仪表盘观察和接管正在运行的会话。
+---
+
+默认情况下，CLI 把浏览器配置保存在内存中——在同一 session 内的多次 CLI 调用之间，cookie 与存储状态（storage state）会保留，但浏览器关闭后即丢失。
+
+## 命名 session
+
+运行多个相互隔离的浏览器实例：
+
+```bash
+playwright-cli open https://playwright.dev
+playwright-cli -s=example open https://example.com --persistent
+playwright-cli list
+```
+
+```txt
+### Browsers
+- default:
+  - status: open
+  - browser-type: chrome
+  - user-data-dir: <in-memory>
+  - headed: false
+- example:
+  - status: open
+  - browser-type: chrome
+  - user-data-dir: /Users/me/Library/Caches/ms-playwright/daemon/8f2c.../ud-example-chrome
+  - headed: false
+```
+
+每个 session 都有自己独立的浏览器实例、cookie、localStorage、IndexedDB、缓存、导航历史、打开的标签页以及控制台日志。
+
+`playwright-cli list --all` 会把列出范围扩展到所有工作区，并追加可供 [attach](/docs/commands/attach) 使用的 Playwright 浏览器服务器以及本地 Chrome/Edge 配置。
+
+## 环境变量
+
+```bash
+PLAYWRIGHT_CLI_SESSION=todo-app claude .
+```
+
+该 agent session 中所有的 `playwright-cli` 命令都会使用 `todo-app` 这个浏览器实例。
+
+## 配置文件持久化
+
+### 内存中（默认）
+
+Cookie 和存储在同一 session 的命令之间保留，但浏览器关闭后丢失：
+
+```bash
+playwright-cli open https://example.com
+```
+
+### 持久化到磁盘
+
+配置文件会保存到磁盘，并能在浏览器重启后保留。这等同于 [Playwright MCP](https://playwright.dev/mcp/configuration/user-profile) 中默认的持久化模式。
+
+```bash
+playwright-cli open https://example.com --persistent
+```
+
+配置目录由工作区和 session 名称推导而来——在每个工作区各自的目录下命名为 `ud-<session>-<browser>`：
+
+| 平台 | 默认位置 |
+| --- | --- |
+| macOS | `~/Library/Caches/ms-playwright/daemon/<workspace-hash>/` |
+| Linux | `$XDG_CACHE_HOME/ms-playwright/daemon/<workspace-hash>/`（默认为 `~/.cache`） |
+| Windows | `%LOCALAPPDATA%\ms-playwright\daemon\<workspace-hash>\` |
+
+### 自定义目录
+
+```bash
+playwright-cli open https://example.com --profile=./my-profile
+```
+
+## Session 管理
+
+```bash
+playwright-cli list                     # list sessions in this workspace
+playwright-cli list --all               # list sessions across all workspaces
+playwright-cli -s=name close            # close a specific session
+playwright-cli -s=name detach           # detach without closing an attached browser
+playwright-cli close-all                # close all browsers
+playwright-cli kill-all                 # force kill (for unresponsive browsers)
+playwright-cli -s=name delete-data      # delete stored profile data
+```
+
+`close` 会停止 CLI 自己启动的浏览器。对于用 `attach` 创建的 session，应使用 `detach`——它拆除 session，但让外部浏览器继续运行。参见[附加与分离](/docs/commands/attach)。
+
+## 仪表盘
+
+打开一个可视化仪表盘，观察并控制所有正在运行的 session：
+
+```bash
+playwright-cli show
+```
+
+仪表盘提供：
+
+| 视图 | 说明 |
+| --- | --- |
+| **Session 网格** | 所有活跃的 session，带实时画面投送、名称、URL 和标题。点击可放大。 |
+| **Session 详情** | 实时视口，带标签栏、导航控件，以及完整的远程鼠标/键盘输入。按 Escape 释放输入。 |
+
+使用场景：
+
+- 观看编程智能体在后台操作浏览器
+- 当智能体卡在验证码（CAPTCHA）或 2FA 上时接管操作
+- 在界面中关闭闲置过久的 session 或删除其数据
+
+### 选项
+
+```bash
+playwright-cli show                     # launch the dashboard in the background
+playwright-cli -s=name show             # launch it and reveal a specific session
+playwright-cli show --port=0            # run as a blocking HTTP server on a random port
+playwright-cli show --port=8080 --host=0.0.0.0
+playwright-cli show --kill              # stop the dashboard daemon
+```
+
+### 批注模式
+
+`show --annotate` 把仪表盘变成一款反馈工具：用户在实时页面上框选区域并输入评论，命令随后返回带批注的截图、被框选区域的快照，以及这些笔记。它会阻塞直到用户完成，因此这也是在自动化进行中请求 UI 评审或设计反馈的方式。
+
+```bash
+playwright-cli open https://example.com
+playwright-cli show --annotate
+```
+
+## 保存与恢复状态
+
+保存已认证的状态，以便跨 session 复用：
+
+```bash
+# Login, then save state
+playwright-cli state-save auth-state.json
+
+# Later: restore state in a new session
+playwright-cli state-load auth-state.json
+```
+
+## 工作流：隔离测试
+
+```bash
+# Admin session
+playwright-cli -s=admin open https://app.example.com --persistent
+playwright-cli -s=admin state-load admin-auth.json
+playwright-cli -s=admin goto /admin/settings
+
+# User session
+playwright-cli -s=user open https://app.example.com --persistent
+playwright-cli -s=user state-load user-auth.json
+playwright-cli -s=user goto /dashboard
+
+# Monitor both
+playwright-cli show
+```

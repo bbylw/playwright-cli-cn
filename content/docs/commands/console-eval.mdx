@@ -1,0 +1,141 @@
+---
+title: 控制台与 Eval
+description: 查看浏览器控制台消息、在页面或元素上执行 JavaScript 求值，并运行任意 Playwright 代码。
+---
+
+## 控制台消息
+
+```bash
+playwright-cli console                  # all messages (info and above)
+playwright-cli console error            # errors only
+playwright-cli console warning          # warnings and errors
+playwright-cli console debug            # everything
+playwright-cli console --clear          # clear the message buffer
+```
+
+每个级别都包含比它更严重的级别的消息，默认为 `info`。输出以一行统计信息开头，因此你可以一眼判断页面是否干净：
+
+```bash
+$ playwright-cli console error
+# Total messages: 37 (Errors: 2, Warnings: 5)
+# Returning 2 messages for level "error"
+#
+# [ERROR] Uncaught TypeError: Cannot read property 'map' of undefined @ app.js:42
+# [ERROR] Failed to load resource: 404 (Not Found) @ /api/users
+```
+
+### 工作流：调试出错的页面
+
+```bash
+# Check the console for errors
+playwright-cli console error
+# [ERROR] Failed to fetch: GET https://api.example.com/data 404
+
+# Now you know the API endpoint is returning 404
+# Mock the route or investigate further
+playwright-cli route "**/api/data" \
+  --body='{"items":[]}' --content-type=application/json
+playwright-cli reload
+```
+
+## JavaScript 求值
+
+```bash
+playwright-cli eval <func> [target]
+```
+
+该参数是一个函数——针对页面时使用 `() => { ... }`，当给定目标元素时使用 `element => { ... }`。传入 `--filename` 可以把结果写入文件，而不是内联返回。
+
+### 页面级求值
+
+```bash
+$ playwright-cli eval "() => document.title"
+# React - TodoMVC
+
+$ playwright-cli eval "() => window.innerWidth + 'x' + window.innerHeight"
+# 1280x720
+
+$ playwright-cli eval "() => JSON.stringify([...document.querySelectorAll('a')].map(a => a.href))" \
+    --filename=links.json
+```
+
+### 元素求值
+
+`eval` 是读取 snapshot（可访问性快照）中不会展示的属性的手段——`id`、`class`、`data-*`、计算后的样式：
+
+```bash
+$ playwright-cli eval "el => el.id" e15
+# item-42
+
+$ playwright-cli eval "el => el.getAttribute('data-testid')" e15
+# todo-item
+
+$ playwright-cli eval "el => getComputedStyle(el).color" e5
+# rgb(255, 0, 0)
+```
+
+### 管道输出结果
+
+`--raw` 会去掉页面状态和 snapshot，只留下返回值：
+
+```bash
+playwright-cli --raw eval "JSON.stringify(performance.timing)" | jq '.loadEventEnd - .navigationStart'
+```
+
+## 运行 Playwright 代码
+
+使用完整的 API 能力执行任意 Playwright 脚本：
+
+```bash
+playwright-cli run-code <code>
+playwright-cli run-code --filename=script.js
+```
+
+代码必须是单个函数表达式——它会被包裹成 `(...)` 后求值，因此 `import` / `require` 不可用。它会接收到当前的 `page`，而它的返回值会被打印出来。
+
+### 设置地理位置
+
+```bash
+playwright-cli run-code "async (page) => {
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation({latitude: 37.77, longitude: -122.42});
+}"
+```
+
+### 等待特定条件
+
+```bash
+playwright-cli run-code "async (page) => {
+  await page.waitForSelector('.data-loaded');
+  return 'Data loaded successfully';
+}"
+```
+
+### 模拟媒体特性
+
+```bash
+playwright-cli run-code "async (page) => page.emulateMedia({ colorScheme: 'dark' })"
+```
+
+### 在 iframe 内操作
+
+```bash
+playwright-cli run-code "async (page) => {
+  const frame = page.locator('iframe#checkout').contentFrame();
+  await frame.getByRole('button', { name: 'Pay' }).click();
+}"
+```
+
+### 抓取结构化数据
+
+```bash
+playwright-cli run-code "async (page) => {
+  const items = await page.$$eval('.product', els =>
+    els.map(el => ({
+      name: el.querySelector('.name').textContent,
+      price: el.querySelector('.price').textContent
+    }))
+  );
+  return JSON.stringify(items, null, 2);
+}"
+```

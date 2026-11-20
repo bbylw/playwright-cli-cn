@@ -1,0 +1,150 @@
+---
+title: 简介
+description: 为编程智能体设计的浏览器自动化命令行工具 Playwright CLI 总览。
+---
+
+Playwright CLI 是一个专为编程智能体（coding agent）设计的浏览器自动化命令行工具。节省 token 的命令和可安装的 skill（技能）让智能体在有限的上下文窗口内，能够在浏览器自动化、大型代码库和推理之间取得平衡。
+
+## 示例
+
+```bash
+$ playwright-cli open https://demo.playwright.dev/todomvc --headed
+$ playwright-cli type "Buy groceries"
+$ playwright-cli press Enter
+$ playwright-cli type "Water flowers"
+$ playwright-cli press Enter
+$ playwright-cli check e21
+$ playwright-cli screenshot
+```
+
+每条命令执行后，CLI 都会输出当前的页面状态：
+
+```txt
+### Page
+- Page URL: https://demo.playwright.dev/todomvc/#/
+- Page Title: React - TodoMVC
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-14T19-22-42-679Z.yml)
+```
+
+快照（snapshot）文件中包含可访问性树（accessibility tree），以及供下一条命令使用的元素 ref。
+
+## 核心特性
+
+- **节省 token** —— 简洁的 CLI 输出避免了把庞大的工具 schema 加载进模型上下文
+- **基于 skill** —— 智能体通过可安装的 skill 发现能力，而不是依赖冗长的帮助文本
+- **daemon（常驻进程）架构** —— 浏览器进程常驻，因此每条命令都没有启动开销
+- **基于 ref** —— 带元素 ref 的可访问性快照，让交互确定可复现
+- **跨浏览器** —— 支持 Chrome、Firefox、WebKit 和 Edge
+- **会话（sessions）** —— 多个相互隔离的浏览器实例，各自拥有独立的状态
+
+## Playwright CLI 与 MCP 对比
+
+|  | **Playwright CLI** | **[MCP](https://playwright.dev/mcp/introduction)** |
+| --- | --- | --- |
+| **最适合** | 在大型代码库中工作的编程智能体（Claude Code、Copilot） | 专门的智能体循环、探索式自动化 |
+| **工作方式** | 智能体运行 shell 命令 | LLM 调用带结构化参数的 MCP 工具 |
+| **Token 成本** | 更低 —— CLI 输出简洁，skill 按需加载 | 更高 —— 工具 schema 和快照都占据上下文 |
+| **默认模式** | Headless（无头） | Headed（有头） |
+| **准备工作** | `npm install -g @playwright/cli` | 在 MCP 客户端中编写 JSON 配置 |
+
+## 全部命令
+
+运行 `playwright-cli --help` 可以查看内置的命令清单，运行 `playwright-cli --help <command>` 可以查看单条命令的参数和选项。
+
+### 核心（Core）
+
+```bash
+open [url]                  attach [name]               close
+detach                      goto <url>                  type <text>
+click <target> [button]     dblclick <target> [button]  fill <target> <text>
+drag <start> <end>          drop <target>               hover <target>
+select <target> <val>       upload <files...>           check <target>
+uncheck <target>            snapshot [target]           find [text]
+eval <func> [target]        dialog-accept [prompt]      dialog-dismiss
+resize <w> <h>              delete-data
+```
+
+### 导航（Navigation）
+
+```bash
+go-back                     go-forward                  reload
+```
+
+### 键盘（Keyboard）
+
+```bash
+press <key>                 keydown <key>               keyup <key>
+```
+
+### 鼠标（Mouse）
+
+```bash
+mousemove <x> <y>           mousedown [button]          mouseup [button]
+mousewheel <dx> <dy>
+```
+
+### 另存为（Save as）
+
+```bash
+screenshot [target]         pdf
+```
+
+### 标签页（Tabs）
+
+```bash
+tab-list                    tab-new [url]               tab-close [index]
+tab-select <index>
+```
+
+### 存储（Storage）
+
+```bash
+state-load <file>           state-save [file]
+cookie-list                 cookie-get <name>           cookie-set <name> <val>
+cookie-delete <name>        cookie-clear
+localstorage-list           localstorage-get <key>      localstorage-set <k> <v>
+localstorage-delete <key>   localstorage-clear
+sessionstorage-list         sessionstorage-get <key>    sessionstorage-set <k> <v>
+sessionstorage-delete <k>   sessionstorage-clear
+```
+
+### 网络（Network）
+
+```bash
+requests                    request <index>             request-headers <index>
+request-body <index>        response-headers <index>    response-body <index>
+route <pattern>             route-list                  unroute [pattern]
+network-state-set <state>
+```
+
+### 开发者工具（DevTools）
+
+```bash
+console [min-level]         run-code [code]             recording-start
+recording-stop              tracing-start               tracing-stop
+video-start [file]          video-stop                  video-chapter <title>
+video-show-actions          video-hide-actions          show
+pause-at <location>         resume                      step-over
+generate-locator <target>   highlight [target]
+```
+
+### 安装（Install）
+
+```bash
+install                     install-browser [browser]
+```
+
+### 浏览器会话（Browser sessions）
+
+```bash
+-s=<name> <cmd>             list                        close-all
+kill-all
+```
+
+### 全局选项（Global options）
+
+```bash
+--help [command]            --json                      --raw
+--version
+```

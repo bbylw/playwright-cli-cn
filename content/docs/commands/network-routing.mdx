@@ -1,0 +1,168 @@
+---
+title: 网络与 Mock
+description: 查看网络请求与响应、mock API 返回值、改写请求头，并测试离线场景。
+---
+
+用于查看网络流量、mock API 响应以及测试离线行为。
+
+## 查看网络请求
+
+`requests` 会输出一份带编号的列表，列出页面加载以来发出的所有请求。为了让列表保持精简，请求成功的静态资源（图片、字体、样式表、脚本）默认被隐藏。
+
+```bash
+playwright-cli requests                      # fetch/XHR and anything that failed
+playwright-cli requests --static             # include successful static resources
+playwright-cli requests --filter="/api/.*"   # only URLs matching this regexp
+playwright-cli requests --clear              # clear the log
+```
+
+```bash
+$ playwright-cli requests --filter="/api/"
+# 1. [GET] https://api.example.com/users => [200] OK
+# 2. [POST] https://api.example.com/users/create => [201] Created
+# 3. [GET] https://api.example.com/prefs => [FAILED] net::ERR_ABORTED
+#
+# Note: 14 static requests not shown, run with --static option to see them.
+```
+
+## 查看单个请求
+
+使用 `requests` 输出中的编号：
+
+| 命令 | 说明 |
+| --- | --- |
+| `request <index>` | 完整详情 —— 请求头和请求体、响应头和响应体 |
+| `request-headers <index>` | 仅请求头 |
+| `request-body <index>` | 仅请求体 |
+| `response-headers <index>` | 仅响应头 |
+| `response-body <index>` | 仅响应体 |
+
+```bash
+playwright-cli request 2
+playwright-cli response-body 2
+playwright-cli response-body 2 --filename=users.json
+```
+
+这五个命令都支持 `--filename`，用于把结果写入文件而不是以文本形式返回。`response-body` 会内联展示文本类型的响应体，而把二进制响应体保存为文件并打印其路径。
+
+## Mock API 响应
+
+```bash
+playwright-cli route <pattern> [options]
+```
+
+| 选项 | 说明 |
+| --- | --- |
+| `--status=<code>` | HTTP 状态码（默认：200） |
+| `--body=<text>` | 响应体（文本或 JSON 字符串） |
+| `--content-type=<type>` | mock 响应的 Content-Type 头 |
+| `--header="<name>: <value>"` | 添加到发出请求的头（可重复） |
+| `--remove-header=<names>` | 以逗号分隔的头名，从请求中移除 |
+
+一条 route（路由）要么是 **fulfill（直接满足）**，要么是 **rewrite（改写）**。传入 `--body` 或 `--status` 会用 mock 响应直接满足请求，页面不会真正访问网络。只传入 `--header` / `--remove-header` 时，请求会带着被修改的头继续发往真实服务器。
+
+### Mock 某个 API 端点
+
+```bash
+playwright-cli route "**/api/users" \
+  --body='[{"name":"Alice"},{"name":"Bob"}]' \
+  --content-type=application/json
+```
+
+### 测试错误处理
+
+```bash
+playwright-cli route "**/api/data" --status=500
+playwright-cli route "**/api/data" --status=503
+```
+
+### 屏蔽资源
+
+```bash
+playwright-cli route "**/*.jpg" --status=404
+playwright-cli route "**/analytics/**" --status=204
+```
+
+### 改写请求头
+
+```bash
+# strip credentials from every request
+playwright-cli route "**/*" --remove-header=cookie,authorization
+
+# add a header to API calls
+playwright-cli route "**/api/**" --header="X-Debug: 1"
+```
+
+## 管理路由
+
+```bash
+playwright-cli route-list               # list active routes
+playwright-cli unroute "**/api/users"   # remove specific route
+playwright-cli unroute                  # remove all routes
+```
+
+## URL 匹配模式
+
+```txt
+**/api/users           - match this path on any origin
+**/api/*/details       - wildcard segment
+**/*.{png,jpg,jpeg}    - match file extensions
+**/search?q=*          - match query parameters
+```
+
+## 用代码实现条件 mock
+
+对于复杂场景 —— 延迟、按条件返回响应、或检查请求体 —— 请使用 `run-code`：
+
+```bash
+playwright-cli run-code "async (page) => {
+  await page.route('**/api/users', async route => {
+    const body = route.request().postDataJSON();
+    if (body.role === 'admin') {
+      await route.fulfill({
+        body: JSON.stringify({ permissions: ['read', 'write', 'delete'] })
+      });
+    } else {
+      await route.fulfill({
+        body: JSON.stringify({ permissions: ['read'] })
+      });
+    }
+  });
+}"
+```
+
+## 工作流：测试错误处理
+
+```bash
+# 1. Mock the API to return 503
+playwright-cli route "**/api/users" --status=503
+
+# 2. Reload to trigger the error
+playwright-cli reload
+
+# 3. Verify the error page
+playwright-cli snapshot
+# - heading "Something went wrong" [level=1]
+# - button "Retry" [ref=e5]
+
+# 4. Screenshot the error state
+playwright-cli screenshot --filename=error-state.png
+
+# 5. Remove mock and retry
+playwright-cli unroute
+playwright-cli click e5
+playwright-cli snapshot
+# - heading "Users" [level=1]
+```
+
+## 测试离线模式
+
+```bash
+playwright-cli network-state-set offline   # go offline
+playwright-cli reload                      # page shows offline state
+playwright-cli snapshot
+# - heading "No internet connection" [level=1]
+
+playwright-cli network-state-set online    # restore connection
+playwright-cli reload                      # page loads normally
+```
