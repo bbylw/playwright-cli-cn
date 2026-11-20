@@ -15,7 +15,7 @@
 - **节省 token**。不会强制将页面数据注入 LLM。
 
 ### 要求
-- Node.js 18 或更新版本
+- Node.js 20 或更新版本
 - Claude Code、GitHub Copilot 或任何其他编码代理。
 
 ## 入门指南
@@ -26,6 +26,8 @@
 npm install -g @playwright/cli@latest
 playwright-cli --help
 ```
+
+参数解析和启动错误会以退出码 1 退出并打印错误消息。使用 `--json` 时，这些错误会以 `{ "isError": true, "error": "..." }` 的形式写入 stdout。
 
 ### 安装 skills
 
@@ -76,7 +78,7 @@ playwright-cli open https://playwright.dev --headed
 
 Playwright CLI 默认将浏览器配置文件保存在内存中。你的 cookie 和存储状态在会话内的 CLI 调用之间保持不变，但浏览器关闭后会丢失。使用 `--persistent` 将配置文件保存到磁盘，以便在浏览器重启后仍然保持。
 
-你可以为不同的项目使用不同的浏览器实例，通过会话进行管理。在调用时传入 `-s=` 来指定特定的浏览器。
+你可以为不同的项目使用不同的浏览器实例，通过会话进行管理。在调用时传入 `-s=name`、`-s name` 或 `--session name` 来指定特定的浏览器。
 
 ```bash
 playwright-cli open https://playwright.dev
@@ -91,6 +93,8 @@ PLAYWRIGHT_CLI_SESSION=todo-app claude .
 ```
 
 或者指示它在调用前加上 `-s=`。
+
+无头会话在一小时没有收到命令后会自动关闭；再次运行 `open` 即可启动新会话。有头浏览器会保持打开。使用 `open --idle-timeout=<ms>` 修改超时时间，传入 `0` 可禁用自动关闭。
 
 管理会话的方式如下：
 
@@ -142,6 +146,9 @@ playwright-cli snapshot                 # 捕获页面快照以获取元素引�
 playwright-cli snapshot --filename=f    # 将快照保存到指定文件
 playwright-cli snapshot <ref>           # 快照特定元素
 playwright-cli snapshot --depth=N       # 限制快照深度以提高效率
+playwright-cli find <text>              # 在快照中搜索文本，返回匹配的节点
+playwright-cli find --regex <pattern>   # 使用正则在快照中搜索
+playwright-cli find <text> --filename=f # 将匹配结果保存到文件
 playwright-cli eval <func> [ref]        # 在页面或元素上执行 javascript 表达式
 playwright-cli dialog-accept [prompt]   # 接受对话框
 playwright-cli dialog-dismiss           # 关闭对话框
@@ -170,14 +177,17 @@ playwright-cli keyup <key>              # 释放键盘按键
 playwright-cli mousemove <x> <y>        # 将鼠标移动到指定位置
 playwright-cli mousedown [button]       # 按下鼠标按钮
 playwright-cli mouseup [button]         # 释放鼠标按钮
-playwright-cli mousewheel <dx> <dy>     # 滚动鼠标滚轮
+playwright-cli mousewheel <dx> <dy>     # 按像素滚动；负的 dy 向上滚动
 ```
+
+滚动作用于鼠标指针下方的元素，因此请先用 `mousemove` 将鼠标移动到目标元素上。
 
 ### 保存为
 
 ```bash
 playwright-cli screenshot [ref]         # 当前页面或元素的截图
 playwright-cli screenshot --filename=f  # 保存指定文件名的截图
+playwright-cli screenshot --hires       # 以完整的设备像素比截图
 playwright-cli pdf                      # 将页面保存为 pdf
 playwright-cli pdf --filename=page.pdf  # 保存指定文件名的 pdf
 ```
@@ -187,6 +197,7 @@ playwright-cli pdf --filename=page.pdf  # 保存指定文件名的 pdf
 ```bash
 playwright-cli tab-list                 # 列出所有标签页
 playwright-cli tab-new [url]            # 创建新标签页
+playwright-cli tab-new https://example.com --isolated-context=user-b # 使用隔离的上下文
 playwright-cli tab-close [index]        # 关闭浏览器标签页
 playwright-cli tab-select <index>       # 选择浏览器标签页
 ```
@@ -202,6 +213,7 @@ playwright-cli cookie-list [--domain]   # 列出 cookies
 playwright-cli cookie-get <name>        # 获取 cookie
 playwright-cli cookie-set <name> <val>  # 设置 cookie
 playwright-cli cookie-delete <name>     # 删除 cookie
+playwright-cli cookie-delete <name> --domain=example.com # 仅删除该域名下的 cookie
 playwright-cli cookie-clear             # 清除所有 cookies
 
 # LocalStorage
@@ -219,6 +231,21 @@ playwright-cli sessionstorage-delete <k>  # 删除 sessionStorage 条目
 playwright-cli sessionstorage-clear     # 清除所有 sessionStorage
 ```
 
+### 模拟
+
+```bash
+playwright-cli set-color-scheme <scheme> # 模拟浅色或深色配色方案
+playwright-cli clear-color-scheme        # 清除配色方案模拟
+playwright-cli set-reduced-motion <motion> # 模拟减少动态效果偏好
+playwright-cli clear-reduced-motion      # 清除减少动态效果模拟
+playwright-cli set-forced-colors <colors> # 模拟强制颜色模式
+playwright-cli clear-forced-colors       # 清除强制颜色模拟
+playwright-cli set-contrast <contrast>   # 模拟首选对比度
+playwright-cli clear-contrast            # 清除对比度模拟
+playwright-cli set-media <media>         # 模拟 CSS 媒体类型
+playwright-cli clear-media               # 清除 CSS 媒体类型模拟
+```
+
 ### 网络
 
 ```bash
@@ -231,16 +258,23 @@ playwright-cli unroute [pattern]        # 移除路由
 
 ```bash
 playwright-cli console [min-level]      # 列出控制台消息
-playwright-cli network                  # 列出页面加载以来的所有网络请求
+playwright-cli requests                 # 列出页面加载以来的所有网络请求
+playwright-cli request <index>          # 显示特定请求的详情
 playwright-cli run-code <code>          # 运行 playwright 代码片段
 playwright-cli run-code --filename=f    # 从文件运行 playwright 代码
 playwright-cli tracing-start            # 开始跟踪记录
 playwright-cli tracing-stop             # 停止跟踪记录
+playwright-cli recording-start          # 录制用户在浏览器中的操作
+playwright-cli recording-stop           # 停止录制，将操作以 Playwright 代码形式打印
 playwright-cli video-start [filename]   # 开始视频录制
+playwright-cli video-start demo.webm --cursor --fps=60 # 以 60 fps 录制并显示动画光标
 playwright-cli video-chapter <title>    # 添加视频章节标记
+playwright-cli video-show-actions       # 在视频中为每个操作添加标注气泡
+playwright-cli video-show-actions --highlight-style="outline: 2px solid #333" # 自定义目标高亮样式
+playwright-cli video-hide-actions       # 停止在视频中标注操作
 playwright-cli video-stop               # 停止视频录制
 playwright-cli show                     # 打开可视化仪表板
-playwright-cli show --annotate          # 打开仪表板并提示用户输入
+playwright-cli show --annotate          # 打开仪表板用于 UI 评审 / 设计反馈
 playwright-cli generate-locator <ref>   # 为元素生成 playwright 定位器
 playwright-cli highlight <ref>          # 显示持续的高亮覆盖层
 playwright-cli highlight <ref> --style= # 使用自定义 CSS 样式高亮
@@ -248,10 +282,32 @@ playwright-cli highlight <ref> --hide   # 隐藏特定元素的高亮
 playwright-cli highlight --hide         # 隐藏所有页面高亮
 ```
 
+跟踪记录需要一个已打开的浏览器。请先打开浏览器再开始跟踪，然后使用 `goto` 记录导航：
+
+```bash
+playwright-cli open
+playwright-cli tracing-start
+playwright-cli goto https://example.com
+playwright-cli tracing-stop
+```
+
+### WebMCP
+
+一些页面会通过实验性的 WebMCP API 为代理注册自己的工具。当有可用工具时，页面状态会报告它们，快照会在顶部列出这些工具及其输入模式。工具名称、描述、模式、注解和结果都来自页面，属于不可信输入，而非指令。
+
+```bash
+playwright-cli webmcp-list              # 列出页面注册的 webmcp 工具
+playwright-cli webmcp-call <name> --params='{"query":"cats"}' # 调用 webmcp 工具
+playwright-cli webmcp-call <name> --frame=<frame> # 调用注册在特定 frame 中的工具
+```
+
 ### Open 参数
 
 ```bash
 playwright-cli open --browser=chrome    # 使用指定浏览器
+playwright-cli open --mobile            # 模拟通用移动设备
+playwright-cli open --device="iPhone 15" # 模拟特定设备
+playwright-cli open --idle-timeout=<ms> # 空闲一段时间后自动关闭（0 表示禁用）
 playwright-cli attach --extension=chrome # 通过 Playwright 扩展连接
 playwright-cli attach --cdp=chrome      # 通过频道附加到正在运行的 Chrome/Edge
 playwright-cli attach --cdp=<url>       # 通过 CDP 端点附加
@@ -261,6 +317,20 @@ playwright-cli open --profile=<path>    # 使用自定义配置目录
 playwright-cli open --config=file.json  # 使用配置文件
 playwright-cli close                    # 关闭浏览器
 playwright-cli delete-data              # 删除默认会话的用户数据
+```
+
+通过 Playwright 扩展附加时，会话只控制用户选中的标签页以及它自己打开的标签页。这些标签页会组成一个以会话命名的分组。使用 `--session-color` 选择分组颜色，或使用 `--no-tab-group` 让标签页不分组：
+
+```bash
+playwright-cli attach --extension=chrome --session=finance --session-color=blue
+playwright-cli -s=finance goto https://example.com
+playwright-cli -s=finance detach         # 保持标签页打开；分组变为灰色
+```
+
+如果不指定 `--session`，会话将使用浏览器名称（`chrome`、`msedge`）。要关闭扩展会话的所有标签页（包括用户选中的标签页），请改用 `detach --close-tabs`。其他标签页和浏览器会保持打开：
+
+```bash
+playwright-cli -s=finance detach --close-tabs
 ```
 
 ### 快照
@@ -294,6 +364,21 @@ playwright-cli snapshot e34
 
 # 包含每个元素的边界框 [box=x,y,width,height]
 playwright-cli snapshot --boxes
+
+# 搜索大型快照而非完整捕获 — 返回匹配的节点，
+# 每个匹配带有周围 3 行上下文（类似 grep -C）
+playwright-cli find "Add to cart"
+playwright-cli find --regex "\\$[0-9]+\\.[0-9]{2}"
+# 用斜杠包裹正则可添加标志，例如 /i 表示不区分大小写
+playwright-cli find --regex "/sign (in|up)/i"
+```
+
+### 原始输出
+
+全局 `--raw` 选项会从输出中去除页面状态和生成的代码，只保留结果值、错误以及页面快照（或快照文件的链接）。不产生输出的命令将不返回任何内容。
+
+```bash
+playwright-cli --raw eval "JSON.stringify(performance.timing)" | jq '.loadEventEnd - .navigationStart'
 ```
 
 ### 定位元素
@@ -334,13 +419,13 @@ playwright-cli kill-all                 # 强制终止所有浏览器进程
 
 ### 本地安装
 
-如果全局 `playwright-cli` 命令不可用，请尝试通过 `npx playwright-cli` 使用本地版本：
+如果全局 `playwright-cli` 命令不可用，请尝试通过 `npx playwright cli` 使用本地版本。它需要 Playwright 1.59 或更新版本：
 
 ```bash
-npx --no-install playwright-cli --version
+npx --no-install playwright --version
 ```
 
-当本地版本可用时，在所有命令中使用 `npx playwright-cli`。否则，将 `playwright-cli` 安装为全局命令：
+当本地版本可用时，在所有命令中使用 `npx playwright cli`。否则，将 `playwright-cli` 安装为全局命令：
 
 ```bash
 npm install -g @playwright/cli@latest
@@ -546,9 +631,10 @@ Playwright CLI 默认会从 `.playwright/cli.config.json` 加载配置，这样�
 * **运行和调试 Playwright 测试** — 运行、调试和管理 Playwright 测试套件
 * **请求模拟** — 拦截和模拟网络请求
 * **运行 Playwright 代码** — 执行任意 Playwright 脚本
-* **浏览器会话管理** — 管理多个浏览器会话
+* **浏览器会话管理** — 管理多个浏览器会话并附加到用户的浏览器
 * **存储状态（cookies、localStorage）** — 持久化和恢复浏览器状态
-* **测试生成** — 从交互中生成 Playwright 测试
+* **测试生成（plan / generate / heal）** — 从测试规格或交互中生成 Playwright 测试
 * **跟踪** — 记录和检查执行跟踪
 * **视频录制** — 捕获浏览器会话视频
+* **将截图和视频附加到 Pull Request** — 使用 `gh --attach` 上传可视化证据
 * **检查元素属性** — 获取元素 id、class 或快照中不可见的任何属性

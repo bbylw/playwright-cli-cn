@@ -530,7 +530,7 @@
                                 <svg class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Node.js 18 或更新版本
+                                Node.js 20 或更新版本
                             </li>
                             <li class="flex items-center">
                                 <svg class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -564,20 +564,20 @@
                             </div>
                             
                             <div class="pt-6 border-t border-paper/10">
-                                <div class="text-gray-500 mb-2"># 本地安装（如果全局命令不可用）</div>
-                                <div class="text-paper">npx playwright-cli --version</div>
+                                <div class="text-gray-500 mb-2"># 本地安装（如果全局命令不可用，需要 Playwright 1.59+）</div>
+                                <div class="text-paper">npx --no-install playwright --version</div>
                             </div>
                             
                             <div>
                                 <div class="text-gray-500 mb-2"># 使用本地版本</div>
-                                <div class="text-paper">npx playwright-cli open https://example.com</div>
+                                <div class="text-paper">npx playwright cli open https://example.com</div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="mt-8 editorial-aside-accent text-paper">
                         <p class="font-sans text-lg leading-relaxed text-gray-400">
-                            如果全局 <code class="font-mono text-accent">playwright-cli</code> 命令不可用，请尝试通过 <code class="font-mono text-accent">npx playwright-cli</code> 使用本地版本。
+                            如果全局 <code class="font-mono text-accent">playwright-cli</code> 命令不可用，请尝试通过 <code class="font-mono text-accent">npx playwright cli</code> 使用本地版本（需要 Playwright 1.59 或更新版本）。
                         </p>
                     </div>
                 </div>
@@ -631,6 +631,10 @@
                         <div class="group">
                             <code class="font-mono text-sm text-accent">playwright-cli snapshot</code>
                             <p class="font-sans text-sm text-gray-500 mt-1">捕获页面快照以获取元素引用</p>
+                        </div>
+                        <div class="group">
+                            <code class="font-mono text-sm text-accent">playwright-cli find &lt;text&gt;</code>
+                            <p class="font-sans text-sm text-gray-500 mt-1">在快照中搜索文本，返回匹配的节点</p>
                         </div>
                     </div>
                 </div>
@@ -695,7 +699,7 @@
                             <p class="font-sans text-sm text-gray-500 mt-1">列出控制台消息</p>
                         </div>
                         <div class="group">
-                            <code class="font-mono text-sm text-accent">playwright-cli network</code>
+                            <code class="font-mono text-sm text-accent">playwright-cli requests</code>
                             <p class="font-sans text-sm text-gray-500 mt-1">列出所有网络请求</p>
                         </div>
                         <div class="group">
