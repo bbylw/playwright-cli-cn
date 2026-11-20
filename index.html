@@ -4,289 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Playwright CLI — 具有 SKILLS 功能的 Playwright CLI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'serif': ['Playfair Display', 'Georgia', 'serif'],
-                        'sans': ['Source Sans 3', 'system-ui', 'sans-serif'],
-                    },
-                    colors: {
-                        'ink': '#0a0a0a',
-                        'paper': '#fafaf8',
-                        'cream': '#f5f5f0',
-                        'gray': {
-                            '100': '#f0f0ec',
-                            '200': '#e0e0d8',
-                            '300': '#c0c0b8',
-                            '400': '#8a8a80',
-                            '500': '#6a6a60',
-                            '600': '#4a4a40',
-                            '700': '#2a2a20',
-                            '800': '#1a1a10',
-                        },
-                        'accent': '#c41e3a',
-                    },
-                    animation: {
-                        'reveal': 'reveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'slide-up': 'slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'fade-in': 'fadeIn 1.2s ease-out forwards',
-                        'line-grow': 'lineGrow 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'marquee': 'marquee 30s linear infinite',
-                    },
-                    keyframes: {
-                        reveal: {
-                            '0%': { opacity: '0', transform: 'translateY(40px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(60px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        lineGrow: {
-                            '0%': { transform: 'scaleX(0)' },
-                            '100%': { transform: 'scaleX(1)' },
-                        },
-                        marquee: {
-                            '0%': { transform: 'translateX(0)' },
-                            '100%': { transform: 'translateX(-50%)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            font-family: 'Source Sans 3', system-ui, sans-serif;
-            background: #fafaf8;
-            color: #0a0a0a;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        
-        .editorial-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2px;
-            background: #0a0a0a;
-        }
-        
-        .editorial-grid > * {
-            background: #fafaf8;
-            padding: 3rem;
-        }
-        
-        .line-accent {
-            position: relative;
-        }
-        
-        .line-accent::after {
-            content: '';
-            position: absolute;
-            bottom: -4px;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: #c41e3a;
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        .line-accent:hover::after {
-            transform: scaleX(1);
-        }
-        
-        .dropcap::first-letter {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 4rem;
-            font-weight: 700;
-            float: left;
-            line-height: 0.8;
-            margin-right: 0.5rem;
-            margin-top: 0.1rem;
-            color: #c41e3a;
-        }
-        
-        .editorial-rule {
-            height: 1px;
-            background: #0a0a0a;
-            width: 100%;
-        }
-        
-        .editorial-rule-thick {
-            height: 3px;
-            background: #0a0a0a;
-            width: 100%;
-        }
-        
-        .editorial-rule-accent {
-            height: 1px;
-            background: #c41e3a;
-            width: 100%;
-        }
-        
-        .text-balance {
-            text-wrap: balance;
-        }
-        
-        .hover-lift {
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        
-        .hover-lift:hover {
-            transform: translateY(-4px);
-        }
-        
-        .stagger-1 { animation-delay: 0.1s; }
-        .stagger-2 { animation-delay: 0.2s; }
-        .stagger-3 { animation-delay: 0.3s; }
-        .stagger-4 { animation-delay: 0.4s; }
-        .stagger-5 { animation-delay: 0.5s; }
-        
-        @media (prefers-reduced-motion: reduce) {
-            .animate-reveal,
-            .animate-slide-up,
-            .animate-fade-in {
-                opacity: 1;
-                transform: none;
-                animation: none;
-            }
-            
-            .hover-lift:hover {
-                transform: none;
-            }
-            
-            .line-accent::after {
-                transition: none;
-            }
-        }
-        
-        ::selection {
-            background: #c41e3a;
-            color: #fafaf8;
-        }
-        
-        .editorial-shadow {
-            box-shadow: 
-                0 1px 2px rgba(0, 0, 0, 0.04),
-                0 4px 8px rgba(0, 0, 0, 0.04),
-                0 16px 32px rgba(0, 0, 0, 0.04);
-        }
-        
-        .editorial-shadow-lg {
-            box-shadow: 
-                0 2px 4px rgba(0, 0, 0, 0.04),
-                0 8px 16px rgba(0, 0, 0, 0.06),
-                0 24px 48px rgba(0, 0, 0, 0.08);
-        }
-        
-        .noise-overlay {
-            position: relative;
-        }
-        
-        .noise-overlay::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0.03;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .code-editorial {
-            background: #0a0a0a;
-            color: #fafaf8;
-            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 0.875rem;
-            line-height: 1.8;
-            padding: 2rem;
-            position: relative;
-        }
-        
-        .code-editorial::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: #c41e3a;
-        }
-        
-        .editorial-number {
-            font-family: 'Playfair Display', Georgia, serif;
-            font-size: 8rem;
-            font-weight: 900;
-            line-height: 1;
-            color: rgba(10, 10, 10, 0.05);
-            position: absolute;
-            top: -1rem;
-            left: -1rem;
-        }
-        
-        .editorial-aside {
-            border-left: 3px solid #0a0a0a;
-            padding-left: 1.5rem;
-            margin-left: 0;
-        }
-        
-        .editorial-aside-accent {
-            border-left: 3px solid #c41e3a;
-            padding-left: 1.5rem;
-            margin-left: 0;
-        }
-    </style>
+    <meta name="description" content="Playwright CLI 中文文档：面向现代编码代理的浏览器自动化 CLI，比 MCP 更节省 token，支持 Skills、会话管理与可视化仪表板。">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" content="#fafaf8">
+    <meta property="og:title" content="Playwright CLI — 具有 SKILLS 功能的 Playwright CLI">
+    <meta property="og:description" content="面向现代编码代理的浏览器自动化 CLI，比 MCP 更节省 token，支持 Skills、会话管理与可视化仪表板。">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="zh_CN">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Cpath d='M8 10l6 6-6 6' stroke='%23c41e3a' stroke-width='3' fill='none'/%3E%3Crect x='17' y='20' width='8' height='3' fill='%23fafaf8'/%3E%3C/svg%3E">
+    <link rel="preload" href="assets/playfair-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="assets/source-sans-3-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="assets/style.css">
 </head>
-<body class="noise-overlay">
+<body id="top" class="noise-overlay">
+    <a href="#main" class="skip-link font-sans">跳转到主要内容</a>
+    <div id="top-sentinel" aria-hidden="true"></div>
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-ink/10">
+    <nav aria-label="主导航" class="fixed top-0 left-0 right-0 z-50 bg-paper/95 backdrop-blur-sm border-b border-ink/10">
         <div class="max-w-7xl mx-auto px-8 py-6 flex items-center justify-between">
-            <a href="#" class="font-serif text-2xl font-bold tracking-tight">Playwright CLI</a>
+            <a href="#top" class="font-serif text-2xl font-bold tracking-tight">Playwright CLI</a>
             
-            <div class="hidden md:flex items-center space-x-12">
-                <a href="#features" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">特性</a>
-                <a href="#installation" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">安装</a>
-                <a href="#commands" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">命令</a>
-                <a href="#configuration" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">配置</a>
-                <a href="https://github.com/microsoft/playwright-cli" class="font-sans text-sm font-semibold tracking-widest uppercase bg-ink text-paper px-6 py-3 hover:bg-gray-800 transition-colors duration-300">GitHub</a>
-            </div>
+            <ul class="hidden md:flex items-center space-x-12">
+                <li><a href="#features" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">特性</a></li>
+                <li><a href="#installation" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">安装</a></li>
+                <li><a href="#commands" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">命令</a></li>
+                <li><a href="#configuration" class="font-sans text-sm font-semibold tracking-widest uppercase line-accent">配置</a></li>
+                <li><a href="https://github.com/microsoft/playwright-cli" class="font-sans text-sm font-semibold tracking-widest uppercase bg-ink text-paper px-6 py-3 hover:bg-gray-800 transition-colors duration-300">GitHub</a></li>
+            </ul>
             
-            <button id="mobile-menu-btn" class="md:hidden">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button id="mobile-menu-btn" type="button" class="md:hidden" popovertarget="mobile-menu" aria-controls="mobile-menu" aria-label="菜单">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
         </div>
         
-        <!-- Mobile menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-ink/10 bg-paper">
-            <div class="px-8 py-6 space-y-4">
-                <a href="#features" class="block font-sans text-sm font-semibold tracking-widest uppercase">特性</a>
-                <a href="#installation" class="block font-sans text-sm font-semibold tracking-widest uppercase">安装</a>
-                <a href="#commands" class="block font-sans text-sm font-semibold tracking-widest uppercase">命令</a>
-                <a href="#configuration" class="block font-sans text-sm font-semibold tracking-widest uppercase">配置</a>
-                <a href="https://github.com/microsoft/playwright-cli" class="block font-sans text-sm font-semibold tracking-widest uppercase text-accent">GitHub</a>
-            </div>
+        <!-- Mobile menu (native popover) -->
+        <div id="mobile-menu" popover="auto">
+            <ul class="px-8 py-6 space-y-4">
+                <li><a href="#features" class="block font-sans text-sm font-semibold tracking-widest uppercase">特性</a></li>
+                <li><a href="#installation" class="block font-sans text-sm font-semibold tracking-widest uppercase">安装</a></li>
+                <li><a href="#commands" class="block font-sans text-sm font-semibold tracking-widest uppercase">命令</a></li>
+                <li><a href="#configuration" class="block font-sans text-sm font-semibold tracking-widest uppercase">配置</a></li>
+                <li><a href="https://github.com/microsoft/playwright-cli" class="block font-sans text-sm font-semibold tracking-widest uppercase text-accent">GitHub</a></li>
+            </ul>
         </div>
     </nav>
 
+    <main id="main">
     <!-- Hero Section -->
-    <section class="min-h-screen flex items-center pt-24 pb-16 px-8">
+    <section id="hero" class="min-h-screen flex items-center pt-24 pb-16 px-8">
         <div class="max-w-7xl mx-auto w-full">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
                 <div class="lg:col-span-7">
@@ -307,7 +74,7 @@
                         <div class="flex flex-col sm:flex-row gap-6">
                             <a href="#installation" class="font-sans text-sm font-semibold tracking-widest uppercase bg-ink text-paper px-10 py-5 hover:bg-gray-800 transition-colors duration-300 inline-flex items-center justify-center">
                                 开始使用
-                                <svg class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg aria-hidden="true" class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                                 </svg>
                             </a>
@@ -336,32 +103,45 @@
     </section>
 
     <!-- Marquee -->
-    <section class="py-8 border-y border-ink/10 overflow-hidden bg-ink">
-        <div class="flex animate-marquee whitespace-nowrap">
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">节省 Token</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">CLI 优先</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">丰富命令</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">会话管理</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">可视化仪表板</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">灵活配置</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">节省 Token</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">CLI 优先</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">丰富命令</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">会话管理</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">可视化仪表板</span>
-            <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
-            <span class="font-serif text-4xl font-bold italic text-paper mx-8">灵活配置</span>
+    <section class="relative py-8 border-y border-ink/10 overflow-hidden bg-ink" aria-label="产品亮点">
+        <div id="marquee-track" class="flex w-max animate-marquee whitespace-nowrap">
+            <div class="flex items-center shrink-0">
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">节省 Token</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8" aria-hidden="true">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">CLI 优先</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8" aria-hidden="true">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">丰富命令</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8" aria-hidden="true">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">会话管理</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8" aria-hidden="true">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">可视化仪表板</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8" aria-hidden="true">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">灵活配置</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8" aria-hidden="true">•</span>
+            </div>
+            <div class="flex items-center shrink-0" aria-hidden="true">
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">节省 Token</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">CLI 优先</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">丰富命令</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">会话管理</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">可视化仪表板</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+                <span class="font-serif text-4xl font-bold italic text-paper mx-8">灵活配置</span>
+                <span class="font-serif text-4xl font-bold italic text-accent mx-8">•</span>
+            </div>
         </div>
+        <button id="marquee-toggle" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center border border-paper/30 bg-ink/80 text-paper hover:bg-gray-800 transition-colors duration-300" aria-label="暂停滚动字幕">
+            <svg class="icon-pause w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M6 4h4v16H6zM14 4h4v16h-4z"></path>
+            </svg>
+            <svg class="icon-play w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8 5v14l11-7z"></path>
+            </svg>
+        </button>
     </section>
 
     <!-- Features Section -->
@@ -392,7 +172,7 @@
                     <div class="editorial-number">01</div>
                     <div class="relative z-10">
                         <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                             </svg>
                         </div>
@@ -408,7 +188,7 @@
                     <div class="editorial-number">02</div>
                     <div class="relative z-10">
                         <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                             </svg>
                         </div>
@@ -424,7 +204,7 @@
                     <div class="editorial-number">03</div>
                     <div class="relative z-10">
                         <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
                             </svg>
                         </div>
@@ -440,7 +220,7 @@
                     <div class="editorial-number">04</div>
                     <div class="relative z-10">
                         <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
                             </svg>
                         </div>
@@ -456,7 +236,7 @@
                     <div class="editorial-number">05</div>
                     <div class="relative z-10">
                         <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                             </svg>
                         </div>
@@ -472,7 +252,7 @@
                     <div class="editorial-number">06</div>
                     <div class="relative z-10">
                         <div class="w-16 h-16 border-2 border-ink flex items-center justify-center mb-8">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg aria-hidden="true" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
@@ -501,7 +281,7 @@
                         <div class="flex items-start">
                             <span class="font-serif text-4xl font-bold text-accent mr-6 leading-none">1</span>
                             <div>
-                                <h4 class="font-serif text-xl font-bold mb-2">全局安装</h4>
+                                <h3 class="font-serif text-xl font-bold mb-2">全局安装</h3>
                                 <p class="font-sans text-gray-400">使用 npm 全局安装 Playwright CLI</p>
                             </div>
                         </div>
@@ -509,7 +289,7 @@
                         <div class="flex items-start">
                             <span class="font-serif text-4xl font-bold text-accent mr-6 leading-none">2</span>
                             <div>
-                                <h4 class="font-serif text-xl font-bold mb-2">安装 Skills</h4>
+                                <h3 class="font-serif text-xl font-bold mb-2">安装 Skills</h3>
                                 <p class="font-sans text-gray-400">为 Claude Code、GitHub Copilot 等安装本地 skills</p>
                             </div>
                         </div>
@@ -517,23 +297,23 @@
                         <div class="flex items-start">
                             <span class="font-serif text-4xl font-bold text-accent mr-6 leading-none">3</span>
                             <div>
-                                <h4 class="font-serif text-xl font-bold mb-2">开始使用</h4>
+                                <h3 class="font-serif text-xl font-bold mb-2">开始使用</h3>
                                 <p class="font-sans text-gray-400">让代理自动运行或手动执行命令</p>
                             </div>
                         </div>
                     </div>
                     
                     <div class="mt-12 pt-8 border-t border-paper/10">
-                        <h4 class="font-sans text-sm font-semibold tracking-widest uppercase mb-4">系统要求</h4>
+                        <h3 class="font-sans text-sm font-semibold tracking-widest uppercase mb-4">系统要求</h3>
                         <ul class="space-y-3 font-sans text-gray-400">
                             <li class="flex items-center">
-                                <svg class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg aria-hidden="true" class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
                                 Node.js 20 或更新版本
                             </li>
                             <li class="flex items-center">
-                                <svg class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg aria-hidden="true" class="w-4 h-4 text-accent mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
                                 Claude Code、GitHub Copilot 或任何其他编码代理
@@ -713,7 +493,7 @@
             <div class="mt-16 text-center animate-reveal">
                 <a href="https://github.com/microsoft/playwright-cli#commands" class="font-sans text-sm font-semibold tracking-widest uppercase border-2 border-ink px-10 py-5 hover:bg-ink hover:text-paper transition-colors duration-300 inline-flex items-center">
                     查看完整命令文档
-                    <svg class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg aria-hidden="true" class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                     </svg>
                 </a>
@@ -737,14 +517,14 @@
                     
                     <div class="space-y-8">
                         <div class="editorial-aside">
-                            <h4 class="font-serif text-xl font-bold mb-3">配置文件</h4>
+                            <h3 class="font-serif text-xl font-bold mb-3">配置文件</h3>
                             <p class="font-sans text-gray-600">
                                 使用 <code class="font-mono text-sm bg-paper px-2 py-1">--config</code> 选项指定配置文件，或使用默认配置 <code class="font-mono text-sm bg-paper px-2 py-1">.playwright/cli.config.json</code>
                             </p>
                         </div>
                         
                         <div class="editorial-aside-accent">
-                            <h4 class="font-serif text-xl font-bold mb-3">环境变量</h4>
+                            <h3 class="font-serif text-xl font-bold mb-3">环境变量</h3>
                             <p class="font-sans text-gray-600">
                                 通过环境变量配置浏览器类型、无头模式、视口大小等，无需修改配置文件。
                             </p>
@@ -756,7 +536,7 @@
                     <div class="bg-paper p-8 editorial-shadow-lg">
                         <div class="flex items-center justify-between mb-8">
                             <h3 class="font-serif text-2xl font-bold">配置示例</h3>
-                            <span class="font-mono text-sm text-gray-400">config.json</span>
+                            <span class="font-mono text-sm text-gray-500">config.json</span>
                         </div>
                         
                         <div class="code-editorial bg-ink">
@@ -900,12 +680,19 @@
                     
                     <!-- Real Dashboard Image -->
                     <div class="relative mb-12 border border-paper/10 overflow-hidden">
-                        <img 
-                            src="https://github.com/user-attachments/assets/99df739d-106a-4520-b004-bb315db41da7" 
-                            alt="Playwright CLI 可视化仪表板 - 显示多个浏览器会话的实时预览和控制界面"
-                            class="w-full h-auto"
-                            loading="lazy"
-                        >
+                        <picture>
+                            <source srcset="assets/dashboard.avif" type="image/avif">
+                            <source srcset="assets/dashboard.webp" type="image/webp">
+                            <img
+                                src="assets/dashboard.webp"
+                                alt="Playwright CLI 可视化仪表板 - 显示多个浏览器会话的实时预览和控制界面"
+                                class="w-full h-auto"
+                                width="1107"
+                                height="729"
+                                loading="lazy"
+                                decoding="async"
+                            >
+                        </picture>
                         <div class="absolute inset-0 bg-gradient-to-t from-ink/20 to-transparent pointer-events-none"></div>
                     </div>
                     
@@ -947,7 +734,7 @@
                 <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
                     <a href="https://github.com/microsoft/playwright-cli" class="font-sans text-sm font-semibold tracking-widest uppercase bg-paper text-ink px-10 py-5 hover:bg-gray-100 transition-colors duration-300 inline-flex items-center">
                         查看 GitHub
-                        <svg class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg aria-hidden="true" class="w-4 h-4 ml-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                         </svg>
                     </a>
@@ -965,6 +752,7 @@
             </div>
         </div>
     </section>
+    </main>
 
     <!-- Footer -->
     <footer class="py-16 px-8 border-t border-ink/10">
@@ -976,13 +764,13 @@
                         具有 SKILLS 功能的 Playwright CLI。现代编码代理的最佳选择，提供最高效的浏览器自动化体验。
                     </p>
                     <div class="flex space-x-6 mt-8">
-                        <a href="https://github.com/microsoft/playwright-cli" class="text-gray-400 hover:text-ink transition-colors duration-300">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <a href="https://github.com/microsoft/playwright-cli" aria-label="GitHub 上游仓库" class="text-gray-400 hover:text-ink transition-colors duration-300">
+                            <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"></path>
                             </svg>
                         </a>
-                        <a href="https://playwright.dev" class="text-gray-400 hover:text-ink transition-colors duration-300">
-                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <a href="https://playwright.dev" aria-label="Playwright 官网" class="text-gray-400 hover:text-ink transition-colors duration-300">
+                            <svg aria-hidden="true" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
                             </svg>
                         </a>
@@ -990,7 +778,7 @@
                 </div>
                 
                 <div class="md:col-span-3">
-                    <h4 class="font-sans text-sm font-semibold tracking-widest uppercase mb-6">文档</h4>
+                    <h2 class="font-sans text-sm font-semibold tracking-widest uppercase mb-6">文档</h2>
                     <ul class="space-y-4">
                         <li><a href="#installation" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">安装指南</a></li>
                         <li><a href="#commands" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">命令参考</a></li>
@@ -1000,7 +788,7 @@
                 </div>
                 
                 <div class="md:col-span-4">
-                    <h4 class="font-sans text-sm font-semibold tracking-widest uppercase mb-6">资源</h4>
+                    <h2 class="font-sans text-sm font-semibold tracking-widest uppercase mb-6">资源</h2>
                     <ul class="space-y-4">
                         <li><a href="https://github.com/microsoft/playwright-cli" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">GitHub</a></li>
                         <li><a href="https://playwright.dev" class="font-sans text-gray-500 hover:text-ink transition-colors duration-300">Playwright 文档</a></li>
@@ -1011,10 +799,10 @@
             </div>
             
             <div class="mt-16 pt-8 border-t border-ink/10 flex flex-col md:flex-row justify-between items-center">
-                <p class="font-sans text-sm text-gray-400">
+                <p class="font-sans text-sm text-gray-500">
                     © 2026 Playwright CLI. 基于 MIT 许可证开源。
                 </p>
-                <a href="#" class="font-sans text-sm text-gray-400 hover:text-ink transition-colors duration-300 mt-4 md:mt-0">
+                <a href="#top" class="font-sans text-sm text-gray-500 hover:text-ink transition-colors duration-300 mt-4 md:mt-0">
                     返回顶部 ↑
                 </a>
             </div>
@@ -1022,91 +810,50 @@
     </footer>
 
     <!-- Back to Top Button -->
-    <button id="back-to-top" class="fixed bottom-8 right-8 w-12 h-12 bg-ink text-paper flex items-center justify-center opacity-0 invisible transition-all duration-300 hover:bg-gray-800 z-50">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <a href="#top" id="back-to-top" aria-label="返回顶部" class="fixed bottom-8 right-8 w-12 h-12 bg-ink text-paper flex items-center justify-center transition-opacity duration-300 hover:bg-gray-800 z-50">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
         </svg>
-    </button>
+    </a>
 
-    <script>
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-        
-        // Close mobile menu when clicking a link
-        const mobileLinks = mobileMenu.querySelectorAll('a');
-        mobileLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-            });
-        });
-        
-        // Back to top button
-        const backToTopBtn = document.getElementById('back-to-top');
-        
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 500) {
-                backToTopBtn.classList.remove('opacity-0', 'invisible');
-                backToTopBtn.classList.add('opacity-100', 'visible');
-            } else {
-                backToTopBtn.classList.remove('opacity-100', 'visible');
-                backToTopBtn.classList.add('opacity-0', 'invisible');
-            }
-        });
-        
-        backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-        
-        // Animate on scroll
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px',
-            threshold: 0.1
-        };
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.animationPlayState = 'running';
-                }
-            });
-        }, observerOptions);
-        
-        document.querySelectorAll('.animate-reveal').forEach(el => {
-            el.style.animationPlayState = 'paused';
-            observer.observe(el);
-        });
-        
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-        
-        // Add prefers-reduced-motion check
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            document.querySelectorAll('.animate-reveal').forEach(el => {
-                el.style.opacity = '1';
-                el.style.transform = 'none';
-                el.style.animation = 'none';
-            });
+    <script type="module">
+        // Mobile menu: native Popover API with a lightweight fallback for older browsers.
+        const menu = document.getElementById('mobile-menu');
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const supportsPopover = Object.hasOwn(HTMLElement.prototype, 'popover');
+        if (!supportsPopover) {
+            document.documentElement.classList.add('no-popover');
+            menu.removeAttribute('popover');
+            menu.hidden = true;
+            menuBtn.addEventListener('click', () => { menu.hidden = !menu.hidden; });
         }
+        menu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (supportsPopover) menu.hidePopover();
+                else menu.hidden = true;
+            });
+        });
+
+        // Marquee pause/play control (WCAG 2.2.2 Pause, Stop, Hide).
+        const track = document.getElementById('marquee-track');
+        const marqueeToggle = document.getElementById('marquee-toggle');
+        marqueeToggle.addEventListener('click', () => {
+            const paused = track.classList.toggle('marquee-paused');
+            marqueeToggle.classList.toggle('is-paused', paused);
+            marqueeToggle.setAttribute('aria-label', paused ? '播放滚动字幕' : '暂停滚动字幕');
+        });
+
+        // Back-to-top visibility via a top sentinel (no scroll listeners).
+        const backToTop = document.getElementById('back-to-top');
+        new IntersectionObserver(([entry]) => {
+            backToTop.classList.toggle('is-hidden', entry.isIntersecting);
+        }).observe(document.getElementById('top-sentinel'));
+        // Scroll explicitly so an in-flight smooth scroll is retargeted
+        // (fragment navigation alone can lose to an ongoing programmatic scroll).
+        backToTop.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.scrollTo({ top: 0 });
+        });
     </script>
 </body>
 </html>
