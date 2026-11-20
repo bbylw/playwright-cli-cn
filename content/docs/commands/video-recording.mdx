@@ -1,0 +1,158 @@
+---
+title: 视频录制
+description: 把浏览器 session 录制为带章节标记和操作标注的 WebM 视频。
+---
+
+把浏览器 session 录制为带章节标记（chapter marker）和操作标注（callout）的 WebM 视频。
+
+## 命令
+
+| Command | Description |
+| --- | --- |
+| `video-start [filename]` | 开始录制 |
+| `video-stop` | 停止并保存 |
+| `video-chapter <title>` | 显示全屏章节卡片并标记位置 |
+| `video-show-actions` | 用标注和高亮来注释后续的操作 |
+| `video-hide-actions` | 停止注释操作 |
+
+## 基本录制
+
+```bash
+playwright-cli open https://example.com
+playwright-cli video-start demo.webm
+playwright-cli click e5
+playwright-cli fill e3 "test"
+playwright-cli video-stop
+# Video saved to: .playwright-cli/demo.webm
+```
+
+如果未指定文件名，视频会以 `video-{timestamp}.webm` 保存在输出目录中。
+
+### 视频尺寸
+
+```bash
+playwright-cli video-start --size=800x600
+```
+
+如果省略 `--size`，录制画面会被缩放到 800x800 以内。
+
+## 章节标记
+
+`video-chapter` 会把页面模糊处理，并按指定时长显示一张章节卡片，随后自动移除——很适合在演示流程中做分段过渡。
+
+```bash
+playwright-cli video-start
+
+playwright-cli video-chapter "Step 1: Login" --description="Signing in as a returning user" --duration=2000
+playwright-cli goto https://app.example.com/login
+playwright-cli fill e3 "user@example.com"
+playwright-cli fill e5 "password"
+playwright-cli click e7
+
+playwright-cli video-chapter "Step 2: Navigate to settings"
+playwright-cli goto /settings
+
+playwright-cli video-chapter "Step 3: Update profile"
+playwright-cli fill e10 "New Display Name"
+playwright-cli click e15
+
+playwright-cli video-stop
+```
+
+## 操作标注
+
+`video-show-actions` 让之后的每条命令都在录制中“自我解说”：标注会写明这是什么操作，同时高亮目标元素，并有一个动画指针在各个操作点之间移动。
+
+```bash
+playwright-cli video-start walkthrough.webm
+playwright-cli video-show-actions --duration=600 --position=top-right
+
+playwright-cli click e5
+playwright-cli fill e3 "test"
+
+playwright-cli video-hide-actions
+playwright-cli video-stop
+```
+
+| Option | Description |
+| --- | --- |
+| `--duration=<ms>` | 每个标注在屏幕上停留的时长（默认 500） |
+| `--position=<pos>` | `top-left`、`top`、`top-right`、`bottom-left`、`bottom`、`bottom-right`（默认 `top-right`） |
+| `--cursor=<mode>` | `pointer` 会动画显示一个鼠标指针（默认），`none` 则关闭它 |
+
+## 脚本化视频
+
+想要一段精致的录制——可控的节奏、真实的打字效果、自定义覆盖层——就用 [`run-code`](/docs/commands/console-eval) 从单个脚本驱动整个场景，而不是逐条下发命令。先用 CLI 探索页面以收集 locator，然后再写脚本：
+
+```js
+// hero.js
+async page => {
+  await page.screencast.start({ path: 'video.webm', size: { width: 1280, height: 800 } });
+  await page.goto('https://demo.playwright.dev/todomvc');
+
+  // Chapter card: blurs the page, blocks for the duration, then auto-removes.
+  await page.screencast.showChapter('Adding Todo Items', {
+    description: 'We will add several items to the todo list.',
+    duration: 2000,
+  });
+
+  const input = page.getByRole('textbox', { name: 'What needs to be done?' });
+  await input.pressSequentially('Walk the dog', { delay: 60 });
+  await input.press('Enter');
+  await page.waitForTimeout(1000);
+
+  // Sticky overlay: pointer-events are disabled, so it never blocks interaction.
+  const annotation = await page.screencast.showOverlay(`
+    <div style="position: absolute; top: 8px; right: 8px; padding: 6px 12px;
+      background: rgba(0,0,0,0.7); border-radius: 8px; font-size: 13px; color: white;">
+      ✓ Item added successfully
+    </div>
+  `);
+
+  await input.pressSequentially('Buy groceries', { delay: 60 });
+  await input.press('Enter');
+  await page.waitForTimeout(1500);
+  await annotation.dispose();
+
+  await page.screencast.stop();
+}
+```
+
+```bash
+playwright-cli run-code --filename=hero.js
+```
+
+### Overlay API
+
+| Method | Use case |
+| --- | --- |
+| `page.screencast.start(options)` / `stop()` | 开始与停止录制 |
+| `page.screencast.showChapter(title, { description?, duration?, styleSheet? })` | 带模糊背景的全屏章节卡片 |
+| `page.screencast.showOverlay(html, { duration? })` | 自定义 HTML 覆盖层——标注、标签、高亮 |
+| `page.screencast.showActions(options)` / `hideActions()` | `video-show-actions` 背后的 API |
+| `disposable.dispose()` | 移除以未指定时长方式添加的持久覆盖层 |
+| `page.screencast.hideOverlays()` / `showOverlays()` | 临时隐藏或显示全部覆盖层 |
+
+覆盖层都是 `pointer-events: none`，因此在你点击、填写或与页面交互时可以让它们一直显示。若要把覆盖层定位到某个具体元素上，先读取它的位置信息：
+
+```js
+const bounds = await page.getByText('Walk the dog').boundingBox();
+```
+
+## 视频与追踪的对比
+
+| 特性 | 视频 | 追踪（trace） |
+| --- | --- | --- |
+| 输出 | WebM 文件 | 可用 Trace Viewer 查看的追踪文件 |
+| 展示内容 | 视觉录制 | DOM 快照、网络、控制台、操作 |
+| 最适合 | 演示、文档、bug 报告 | 调试与分析 |
+| 体积 | 较大 | 较小 |
+
+## 使用场景
+
+| 场景 | 做法 |
+| --- | --- |
+| 复现 bug | 录制操作步骤，附到 issue 中 |
+| 测试文档 | 带章节标记地录制 |
+| 监控 agent | 录制 agent 的 session 以便回看 |
+| 制作演示 | 用 `run-code` 和覆盖层把场景脚本化 |

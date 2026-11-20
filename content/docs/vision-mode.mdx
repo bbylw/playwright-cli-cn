@@ -1,0 +1,89 @@
+---
+title: 视觉模式
+description: 对不在可访问性树中的元素，用截图和坐标进行视觉化的鼠标交互。
+---
+
+默认情况下，你通过可访问性快照（snapshot）中的 ref 来操作页面元素。对于没有暴露在可访问性树中的元素 —— canvas 应用、地图、自定义控件 —— 可以使用基于坐标的鼠标命令，并以截图作为视觉参照。
+
+## 命令
+
+| 命令 | 说明 |
+| --- | --- |
+| `mousemove <x> <y>` | 把鼠标移动到像素坐标 |
+| `mousedown [button]` | 按下鼠标按键（left、right、middle） |
+| `mouseup [button]` | 释放鼠标按键 |
+| `mousewheel <dx> <dy>` | 滚动（dx 为水平方向，dy 为垂直方向） |
+| `screenshot` | 截取视口，用于参照定位坐标 |
+| `snapshot --boxes` | 生成带每个元素包围盒的快照 |
+
+坐标是相对视口的 CSS 像素。`screenshot --hires` 截取得到的是设备像素，即会考虑设备像素比（device pixel ratio）—— 要注意它得到的像素坐标*并不是*鼠标命令所期望的坐标。
+
+## 无需猜测即可获得坐标
+
+当元素*确实*在可访问性树中，但你需要它的位置时 —— 比如要拖动它，或者想在它上方画一个标注 —— 用 `snapshot --boxes` 比从截图里读坐标更可靠：
+
+```bash
+$ playwright-cli snapshot --boxes
+# - button "Zoom in" [ref=e12] [box=1180,64,32,32]
+
+$ playwright-cli mousemove 1196 80
+```
+
+## 工作流：与 canvas 应用交互
+
+```bash
+# 先截一张图，看到 canvas 的内容
+playwright-cli screenshot --filename=canvas.png
+
+# 智能体从截图中识别出坐标
+# 点击位置 (150, 300)
+playwright-cli mousemove 150 300
+playwright-cli mousedown
+playwright-cli mouseup
+
+# 从 (100, 200) 拖到 (400, 200)
+playwright-cli mousemove 100 200
+playwright-cli mousedown
+playwright-cli mousemove 400 200
+playwright-cli mouseup
+
+# 确认结果
+playwright-cli screenshot --filename=after-drag.png
+```
+
+## 工作流：点击没有可访问名称的图标
+
+```bash
+# 快照里看不到齿轮图标
+playwright-cli snapshot
+# (输出中没有齿轮图标)
+
+# 截一张图 —— 智能体看到齿轮图标大约在 (850, 45)
+playwright-cli screenshot
+
+# 点击它
+playwright-cli mousemove 850 45
+playwright-cli mousedown
+playwright-cli mouseup
+
+# 设置面板打开后就有正常的可访问性信息了
+playwright-cli snapshot
+# - heading "Settings" [level=2]
+# - textbox "Display name" [ref=e12]
+
+# 其余操作改用 ref
+playwright-cli fill e12 "New Name"
+```
+
+## 何时使用视觉模式
+
+| 场景 | 做法 |
+| --- | --- |
+| 常规网页 | 使用快照中的 ref（默认） |
+| Canvas / WebGL 应用 | 配合截图使用视觉模式 |
+| 地图交互 | 用视觉模式做平移/缩放 |
+| 图片编辑器 | 用视觉模式进行绘制 |
+| 图表 / 图形 | 用视觉模式点击数据点 |
+| 没有 ARIA 的自定义控件 | 把视觉模式作为兜底方案 |
+
+对大多数 Web 应用而言，**默认基于快照的方式更可靠也更节省 token**。只有当可访问性树无法覆盖你的使用场景时，才使用视觉模式。

@@ -1,0 +1,339 @@
+/* Landing page editorial design system.
+   Scoped to .landing-root so it never leaks into the Fumadocs docs UI.
+   Utility classes come from the shared Tailwind v4 theme (app/global.css). */
+
+.landing-root {
+  font-size-adjust: from-font;
+  color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.landing-root h1,
+.landing-root h2,
+.landing-root h3 {
+  text-wrap: balance;
+}
+.landing-root p {
+  text-wrap: pretty;
+}
+
+/* Keep anchored sections clear of the fixed header */
+.landing-root section[id] {
+  scroll-margin-top: 6rem;
+}
+
+.landing-root :focus-visible {
+  outline: 2px solid #c41e3a;
+  outline-offset: 2px;
+}
+
+.landing-root ::selection {
+  background: #c41e3a;
+  color: #fafaf8;
+}
+
+/* Skip link: visually hidden until keyboard focus */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 60;
+  background: #0a0a0a;
+  color: #fafaf8;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip-link:focus-visible {
+  width: auto;
+  height: auto;
+  clip-path: none;
+}
+
+/* Editorial design system */
+.editorial-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  background: #0a0a0a;
+}
+.editorial-grid > * {
+  background: #fafaf8;
+  padding: 3rem;
+}
+@media (max-width: 767px) {
+  .editorial-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.editorial-rule {
+  height: 1px;
+  background: #0a0a0a;
+  width: 100%;
+}
+.editorial-rule-thick {
+  height: 3px;
+  background: #0a0a0a;
+  width: 100%;
+}
+.editorial-rule-accent {
+  height: 1px;
+  background: #c41e3a;
+  width: 100%;
+}
+.editorial-shadow-lg {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 8px 16px rgba(0, 0, 0, 0.06),
+    0 24px 48px rgba(0, 0, 0, 0.08);
+}
+.noise-overlay {
+  position: relative;
+}
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+.code-editorial {
+  background: #0a0a0a;
+  color: #fafaf8;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.875rem;
+  line-height: 1.8;
+  padding: 2rem;
+  position: relative;
+}
+.code-editorial::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: #c41e3a;
+}
+.editorial-number {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(10, 10, 10, 0.05);
+  position: absolute;
+  top: -1rem;
+  left: -1rem;
+}
+.editorial-aside {
+  border-left: 3px solid #0a0a0a;
+  padding-left: 1.5rem;
+  margin-left: 0;
+}
+.editorial-aside-accent {
+  border-left: 3px solid #c41e3a;
+  padding-left: 1.5rem;
+  margin-left: 0;
+}
+
+/* Contrast fixes for small text on dark surfaces (WCAG AA) */
+.landing-root .bg-ink .text-gray-500,
+.landing-root .code-editorial .text-gray-500 {
+  color: #8a8a80;
+}
+.landing-root .bg-ink .text-accent,
+.landing-root .code-editorial .text-accent {
+  color: #f2708a;
+}
+
+/* Hover underline accent */
+.line-accent {
+  position: relative;
+}
+.line-accent::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #c41e3a;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.line-accent:hover::after {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .line-accent::after {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* Card hover lift: spatial motion only when the user allows it */
+.hover-lift {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* Scroll-driven reveal (native CSS, compositor-friendly).
+   Decorative progressive enhancement: static and fully visible
+   without support or under prefers-reduced-motion. */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .animate-reveal {
+      animation: reveal auto linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+  /* Hero is above the fold: keep a time-based entrance instead */
+  #hero .animate-reveal {
+    animation: reveal 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-timeline: auto;
+    animation-range: normal;
+  }
+  #hero .stagger-2 {
+    animation-delay: 0.2s;
+  }
+}
+
+/* Marquee: opt-in motion + visible pause control (WCAG 2.2.2) */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+}
+.animate-marquee.marquee-paused {
+  animation-play-state: paused;
+}
+#marquee-toggle .icon-play {
+  display: none;
+}
+#marquee-toggle.is-paused .icon-play {
+  display: block;
+}
+#marquee-toggle.is-paused .icon-pause {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #marquee-toggle {
+    display: none;
+  }
+}
+
+/* Mobile menu: native popover, anchored below the fixed header */
+#mobile-menu {
+  position: fixed;
+  inset: 5.25rem 0 auto 0;
+  margin: 0;
+  padding: 0;
+  width: auto;
+  max-width: none;
+  border: 0;
+  border-top: 1px solid rgba(10, 10, 10, 0.1);
+  background: #fafaf8;
+  color: #0a0a0a;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+}
+.no-popover #mobile-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+@media (min-width: 768px) {
+  #mobile-menu {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  #mobile-menu {
+    transition: opacity 0.2s ease-out, translate 0.2s ease-out, display 0.2s, overlay 0.2s;
+    transition-behavior: allow-discrete;
+  }
+  #mobile-menu:popover-open {
+    opacity: 1;
+    translate: 0 0;
+  }
+  @starting-style {
+    #mobile-menu:popover-open {
+      opacity: 0;
+      translate: 0 -8px;
+    }
+  }
+  #mobile-menu:not(:popover-open) {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+/* Back-to-top: visible by default (no-JS friendly), toggled via sentinel */
+#top-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 500px;
+  visibility: hidden;
+  pointer-events: none;
+}
+#back-to-top {
+  transition: opacity 0.3s ease, visibility 0.3s, background-color 0.3s;
+}
+#back-to-top.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Defer rendering of heavy below-the-fold sections.
+   Estimates match measured rendered heights to avoid scroll-anchor jumps;
+   "auto" lets the browser remember the real size once rendered. */
+#demo {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 2160px;
+}
+#configuration {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 930px;
+}
+.landing-root footer {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 305px;
+}
+@media (max-width: 767px) {
+  #demo {
+    contain-intrinsic-size: auto 3010px;
+  }
+  #configuration {
+    contain-intrinsic-size: auto 1620px;
+  }
+  .landing-root footer {
+    contain-intrinsic-size: auto 780px;
+  }
+}

@@ -1,0 +1,167 @@
+---
+title: 命令参考
+description: 按组整理的 Playwright CLI 全部命令、参数与全局选项。
+---
+
+下面列出的每条命令都是随时可用的 —— 与 [MCP](https://playwright.dev/mcp/introduction) 不同，CLI 没有能力开关（capability gating）。这里的分组与 `playwright-cli --help` 输出的分组一致；要了解单条命令的确切参数和选项，可运行 `playwright-cli --help <command>`。
+
+用 `<尖括号>` 包裹的参数是必填项，用 `[方括号]` 包裹的参数是可选项。
+
+## 核心（Core）
+
+| 命令 | 说明 |
+| --- | --- |
+| `open [url]` | 打开浏览器，可选地导航到某个 URL |
+| `attach [name]` | 附着（attach）到正在运行的 Playwright 浏览器 |
+| `close` | 关闭浏览器 |
+| `detach` | 从已附着的浏览器脱离，浏览器继续保持运行 |
+| `goto <url>` | 导航到某个 URL |
+| `type <text>` | 在获得焦点的可编辑元素中输入文本 |
+| `click <target> [button]` | 点击元素 |
+| `dblclick <target> [button]` | 双击元素 |
+| `fill <target> <text>` | 向可编辑元素填充文本 |
+| `drag <startTarget> <endTarget>` | 在两个元素之间拖放 |
+| `drop <target>` | 把页面外部的文件或数据拖放到元素上 |
+| `hover <target>` | 悬停在元素上 |
+| `select <target> <val>` | 在下拉框中选择一个选项 |
+| `upload <files...>` | 上传一个或多个文件 |
+| `check <target>` / `uncheck <target>` | 勾选或取消勾选复选框、单选按钮 |
+| `snapshot [target]` | 捕获页面快照以获取元素 ref |
+| `find [text]` | 在页面快照中搜索，返回带上下文的匹配项 |
+| `eval <func> [target]` | 在页面或元素上求值 JavaScript |
+| `dialog-accept [prompt]` / `dialog-dismiss` | 处理对话框 |
+| `resize <w> <h>` | 调整浏览器窗口大小 |
+| `delete-data` | 删除该会话的用户数据 |
+
+参见[交互](/docs/commands/interaction)、[导航](/docs/commands/navigation)和[对话框](/docs/commands/dialogs)。
+
+## 导航（Navigation）
+
+| 命令 | 说明 |
+| --- | --- |
+| `go-back` | 返回上一页 |
+| `go-forward` | 前进到下一页 |
+| `reload` | 重新加载当前页面 |
+
+## 键盘（Keyboard）
+
+| 命令 | 说明 |
+| --- | --- |
+| `press <key>` | 按下某个键，例如 `Enter` 或 `ArrowLeft` |
+| `keydown <key>` / `keyup <key>` | 按住某个键或松开某个键 |
+
+## 鼠标（Mouse）
+
+使用截图像素坐标进行基于坐标的交互。适用于 canvas 应用、地图，以及没有可访问元素的自定义控件。
+
+| 命令 | 说明 |
+| --- | --- |
+| `mousemove <x> <y>` | 把鼠标移动到指定坐标 |
+| `mousedown [button]` / `mouseup [button]` | 按下或释放鼠标按键 |
+| `mousewheel <dx> <dy>` | 使用滚轮滚动 |
+
+参见[视觉模式](/docs/vision-mode)。
+
+## 另存为（Save as）
+
+| 命令 | 说明 |
+| --- | --- |
+| `screenshot [target]` | 对页面或某个元素截图 |
+| `pdf` | 将页面保存为 PDF |
+
+参见 [Screenshots & PDF](/docs/commands/screenshots-pdf)。
+
+## 标签页（Tabs）
+
+| 命令 | 说明 |
+| --- | --- |
+| `tab-list` | 列出所有标签页 |
+| `tab-new [url]` | 新建一个标签页 |
+| `tab-close [index]` | 关闭某个标签页（不给 index 时关闭当前标签页） |
+| `tab-select <index>` | 切换到某个标签页 |
+
+参见 [Tabs](/docs/commands/tabs)。
+
+## 存储（Storage）
+
+| 命令 | 说明 |
+| --- | --- |
+| `state-save [filename]` / `state-load <filename>` | 保存或恢复浏览器存储状态 |
+| `cookie-list`、`cookie-get`、`cookie-set`、`cookie-delete`、`cookie-clear` | 管理 cookie |
+| `localstorage-list/get/set/delete/clear` | 管理 localStorage |
+| `sessionstorage-list/get/set/delete/clear` | 管理 sessionStorage |
+
+参见 [Storage & Authentication](/docs/commands/storage)。
+
+## 网络（Network）
+
+| 命令 | 说明 |
+| --- | --- |
+| `requests` | 列出网络请求，并带编号供 `request` 使用 |
+| `request <index>` | 查看单个请求的完整详情 |
+| `request-headers <index>` / `request-body <index>` | 查看请求的某一部分 |
+| `response-headers <index>` / `response-body <index>` | 查看响应的某一部分 |
+| `route <pattern>` | 拦截并模拟匹配某个 URL 模式的请求 |
+| `route-list` | 列出当前生效的 route |
+| `unroute [pattern]` | 移除匹配 route，或全部移除 |
+| `network-state-set <state>` | 设置浏览器在线或离线 |
+
+参见 [Network & Mocking](/docs/commands/network-routing)。
+
+## 开发者工具（DevTools）
+
+| 命令 | 说明 |
+| --- | --- |
+| `console [min-level]` | 列出控制台消息 |
+| `run-code [code]` | 运行一段 Playwright 代码 |
+| `recording-start` / `recording-stop` | 记录用户操作并输出为 Playwright 代码 |
+| `tracing-start` / `tracing-stop` | 记录执行轨迹 |
+| `video-start [filename]` / `video-stop` | 录制视频 |
+| `video-chapter <title>` | 在视频中添加章节标记 |
+| `video-show-actions` / `video-hide-actions` | 在录制的视频中标注操作 |
+| `show` | 打开 Playwright dashboard |
+| `pause-at <location>`、`resume`、`step-over` | 控制处于暂停状态的测试 |
+| `generate-locator <target>` | 为某个元素生成 Playwright locator |
+| `highlight [target]` | 在页面上显示或隐藏高亮覆盖层 |
+
+参见 [Console & Eval](/docs/commands/console-eval)、[Codegen & Highlighting](/docs/commands/codegen)、[Tracing](/docs/commands/tracing)、[Video Recording](/docs/commands/video-recording) 和 [Test Debugging](/docs/commands/test-debugging)。
+
+## 安装（Install）
+
+| 命令 | 说明 |
+| --- | --- |
+| `install` | 初始化工作区，可选地安装 skills |
+| `install-browser [browser]` | 安装浏览器 |
+
+参见[安装](/docs/installation)。
+
+## 浏览器会话（Browser sessions）
+
+| 命令 | 说明 |
+| --- | --- |
+| `list` | 列出浏览器会话 |
+| `close-all` | 关闭所有浏览器会话 |
+| `kill-all` | 强制终止过期或僵尸浏览器进程 |
+
+参见 [Sessions & Dashboard](/docs/sessions)。
+
+## 全局选项（Global options）
+
+这些选项对每条命令都生效，可以放在命令行的任意位置。
+
+| 选项 | 说明 |
+| --- | --- |
+| `-s=<name>`、`--session=<name>` | 针对某个具名浏览器会话执行 |
+| `--raw` | 只输出结果值，不含页面状态、生成的代码或快照 |
+| `--json` | 把整个回复包装成 JSON |
+| `--help [command]` | 打印帮助 |
+| `--version` | 打印版本 |
+
+```bash
+# 把结果直接管道传给其他工具
+playwright-cli --raw eval "JSON.stringify(performance.timing)" | jq '.loadEventEnd - .navigationStart'
+playwright-cli --raw snapshot > before.yml
+
+# 面向脚本的结构化输出
+playwright-cli list --json
+```

@@ -1,0 +1,54 @@
+---
+title: 标签页
+description: 列出、新建、切换和关闭浏览器标签页，并在多个页面之间对比快照。
+---
+
+| 命令 | 说明 |
+| --- | --- |
+| `tab-list` | 列出所有已打开的标签页 |
+| `tab-new [url]` | 新建一个标签页 |
+| `tab-select <index>` | 按索引切换到某个标签页 |
+| `tab-close [index]` | 关闭某个标签页 |
+
+## 列出标签页
+
+```bash
+$ playwright-cli tab-list
+### Open tabs
+- 0: (current) [React - TodoMVC](https://demo.playwright.dev/todomvc/)
+- 1: [Example Domain](https://example.com/)
+- 2: [Google](https://google.com/)
+```
+
+只要有多个标签页处于打开状态，或者标签页集合发生了变化，`Open tabs` 这一段都会自动出现在任何命令的输出里。
+
+## 新建标签页
+
+```bash
+playwright-cli tab-new                  # blank tab
+playwright-cli tab-new https://example.com  # navigate immediately
+```
+
+## 切换标签页
+
+```bash
+playwright-cli tab-select 1             # switch to second tab
+playwright-cli tab-select 0             # switch back to first
+```
+
+## 关闭标签页
+
+```bash
+playwright-cli tab-close                # close current tab
+playwright-cli tab-close 2              # close specific tab
+```
+
+## 工作流：对比页面
+
+```bash
+playwright-cli open https://staging.example.com
+playwright-cli snapshot --filename=staging.yaml
+playwright-cli tab-new https://example.com
+playwright-cli snapshot --filename=production.yaml
+# Agent compares the two snapshots
+```

@@ -1,0 +1,71 @@
+---
+title: 快速上手
+description: 通过智能体演示和手动命令走查，快速体验 Playwright CLI 的核心工作流。
+---
+
+## 交互式演示
+
+可以尝试向你的编程智能体提出这样的要求：
+
+```txt
+Use playwright skills to test https://demo.playwright.dev/todomvc/.
+Take screenshots for all successful and failing scenarios.
+```
+
+## 手动走查
+
+手动依次运行下面的命令，看看 CLI 是如何工作的：
+
+```bash
+playwright-cli open https://demo.playwright.dev/todomvc/ --headed
+playwright-cli type "Buy groceries"
+playwright-cli press Enter
+playwright-cli type "Water flowers"
+playwright-cli press Enter
+playwright-cli check e21
+playwright-cli screenshot
+playwright-cli close
+```
+
+## 理解输出
+
+每条命令执行后，CLI 都会输出当前页面状态的快照（snapshot）：
+
+```txt
+### Page
+- Page URL: https://demo.playwright.dev/todomvc/#/
+- Page Title: React - TodoMVC
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-14T19-22-42-679Z.yml)
+```
+
+快照文件中包含可访问性树，以及可用于后续命令的元素 ref。
+
+## 核心工作流
+
+每次交互都遵循以下模式：
+
+1. **打开（Open）** —— 用 `playwright-cli open <url>` 打开一个 URL
+2. **快照（Snapshot）** —— 每条命令都会返回带元素 ref 的可访问性树
+3. **交互（Interact）** —— 使用 ref 来点击、输入或填充
+4. **重新快照（Re-snapshot）** —— 每个操作都会返回带新 ref 的更新状态
+
+在页面很大时，如果只需要定位某一个元素，用 `find` 比抓取完整快照更省：
+
+```bash
+playwright-cli find "Sign in"
+playwright-cli find --regex "/sign (in|up)/i"
+```
+
+## 获取帮助
+
+```bash
+playwright-cli --help                # 全部命令，按组展示
+playwright-cli --help screenshot     # 某一条命令的参数和选项
+```
+
+## 接下来
+
+- 查看全部[命令](/docs/capabilities)
+- 深入了解[快照](/docs/snapshots)
+- 为隔离的浏览器实例配置 [Sessions](/docs/sessions)

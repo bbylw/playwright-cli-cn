@@ -1,0 +1,179 @@
+---
+title: 附加与分离
+description: 通过 attach 命令连接到已经在运行的浏览器，而不是新启动一个浏览器。
+---
+
+连接到已经存在的浏览器，而不是新启动一个。
+
+## 命令
+
+| Command | Description |
+| --- | --- |
+| `attach <name>` | 按名称附加到一个已绑定的 Playwright 浏览器 |
+| `attach --cdp=<channel>` | 按 channel 名称连接到正在运行的浏览器 |
+| `attach --cdp=<url>` | 通过 Chrome DevTools Protocol 端点连接 |
+| `attach --endpoint=<url>` | 连接到 Playwright 服务端点 |
+| `attach --extension` | 通过 Playwright 扩展连接（默认 Chrome） |
+| `attach --extension=<channel>` | 通过 Playwright 扩展到特定 channel 连接 |
+| `detach` | 拆除 session，但让外部浏览器继续运行 |
+
+只能指定其中一个目标——把位置参数名称与 `--cdp`、`--endpoint` 或 `--extension` 组合使用会报错。
+
+## 寻找可附加的目标
+
+```bash
+playwright-cli list --all
+```
+
+除了已打开的 session，这条命令还会列出在所有工作区中绑定的 Playwright 浏览器服务器，以及它找到的本地 Chrome/Edge 配置，并给出每一项应该使用的确切 `attach` 命令：
+
+```txt
+### Browsers available to attach via CDP
+- chrome:
+  - data-dir: /Users/me/Library/Application Support/Google/Chrome
+  - attach (extension): `playwright-cli attach --extension=chrome`
+  - attach (remote debugging): enable at chrome://inspect/#remote-debugging
+```
+
+## 按 channel 名称附加
+
+通过 channel 名称连接到正在运行的 Chrome 或 Edge 实例。该浏览器必须已启用远程调试——在目标浏览器中访问 `chrome://inspect/#remote-debugging`，勾选 “Allow remote debugging for this browser instance”。
+
+![chrome://inspect/#remote-debugging 处的 Chrome 远程调试设置](/assets/chrome-remote-debugging.png)
+
+```bash
+# Attach to Chrome
+playwright-cli attach --cdp=chrome
+
+# Attach to Chrome Canary
+playwright-cli attach --cdp=chrome-canary
+
+# Attach to Microsoft Edge
+playwright-cli attach --cdp=msedge
+
+# Attach to Edge Dev
+playwright-cli attach --cdp=msedge-dev
+```
+
+支持的 channel：`chrome`、`chrome-beta`、`chrome-dev`、`chrome-canary`、`msedge`、`msedge-beta`、`msedge-dev`、`msedge-canary`。
+
+这是最简单的连接方式——无需带特殊参数启动 Chrome，也无需知道调试端口。
+
+## CDP 端点
+
+通过 Chrome DevTools Protocol 端点连接到任意基于 Chromium 的浏览器：
+
+```bash
+# Start Chrome with remote debugging
+google-chrome --remote-debugging-port=9222
+
+# Connect from the CLI
+playwright-cli attach --cdp=http://localhost:9222
+playwright-cli snapshot
+playwright-cli click e5
+```
+
+适用于：
+
+- 带 `--remote-debugging-port` 的 Chrome / Chromium
+- 启用远程调试的 Edge
+- 暴露 CDP 的 Electron 应用
+- 云端浏览器服务（Browserbase 等）
+
+## Playwright 服务器端点
+
+连接到远程 Playwright 服务器：
+
+```bash
+playwright-cli attach --endpoint=ws://localhost:3000
+playwright-cli snapshot
+```
+
+## 按绑定名称附加
+
+Playwright 浏览器可以在绑定（bind）时用一个名称暴露自己——`npx playwright test --debug=cli` 就是这样把暂停中的测试暴露出来的。把该名称作为位置参数传入：
+
+```bash
+playwright-cli attach tw-a3f19c
+```
+
+参见[测试调试](/docs/commands/test-debugging)。
+
+## 浏览器扩展
+
+使用 [Playwright 扩展](https://chromewebstore.google.com/detail/playwright-extension/mmlmfjhmonkocbjadbfplnigmagldckm)连接你已有的浏览器标签页。这让你可以复用已登录的 session、cookie 和已安装的扩展。
+
+![Chrome 应用商店中的 Playwright 扩展](/assets/playwright-extension.png)
+
+```bash
+# Attach to Chrome (default)
+playwright-cli attach --extension
+
+# Attach to a specific channel
+playwright-cli attach --extension=chrome-canary
+playwright-cli attach --extension=msedge
+playwright-cli attach --extension=msedge-dev
+```
+
+如果未指定 channel，扩展默认附加到 Chrome。
+
+### 何时使用扩展模式
+
+- **SSO / 2FA** — 复用你已认证的会话，跳过复杂的登录流程
+- **浏览器扩展** — 与依赖已安装扩展的页面交互
+- **已有标签页** — 自动化你已经打开的页面
+
+## Session 命名
+
+attach 会创建一个 session。未提供 `--session` 时，session 会按目标命名——`--cdp=msedge` 会创建名为 `msedge` 的 session，`attach tw-a3f19c` 会创建名为 `tw-a3f19c` 的 session——这样同时附加到 Chrome 和 Edge 时不会在 `default` 上互相冲突。
+
+```bash
+playwright-cli attach --cdp=chrome -s=debug-session
+playwright-cli -s=debug-session snapshot
+playwright-cli -s=debug-session click e5
+```
+
+## 分离
+
+`detach` 结束 session，但不会动它附加的那个浏览器。`close` 只用于 CLI 自己启动的浏览器。
+
+```bash
+playwright-cli detach                   # detach the default attached session
+playwright-cli -s=msedge detach         # detach a named attached session
+```
+
+## 工作流：连接到你正在使用的 Chrome
+
+```bash
+# 1. In Chrome, go to chrome://inspect/#remote-debugging
+#    and enable "Allow remote debugging for this browser instance"
+
+# 2. Attach by channel name
+playwright-cli attach --cdp=chrome
+
+# 3. Interact with your existing tabs
+playwright-cli snapshot
+playwright-cli screenshot --filename=current-state.png
+
+# 4. Save state for future headless sessions
+playwright-cli state-save auth.json
+
+# 5. Leave Chrome running
+playwright-cli -s=chrome detach
+```
+
+## 工作流：调试远程浏览器
+
+```bash
+# On the remote machine: start Chrome with debugging
+google-chrome --remote-debugging-port=9222
+
+# On your machine: connect via SSH tunnel
+ssh -L 9222:localhost:9222 user@remote-host
+
+# Attach and inspect
+playwright-cli attach --cdp=http://localhost:9222
+playwright-cli snapshot
+playwright-cli screenshot --filename=remote-state.png
+playwright-cli console error
+```

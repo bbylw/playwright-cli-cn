@@ -1,0 +1,130 @@
+---
+title: 快照
+description: 快照（snapshot）如何以可访问性树和元素 ref 描述页面状态。
+---
+
+每条命令执行后，`playwright-cli` 都会输出当前浏览器状态的快照（snapshot）—— 一棵带元素 ref、可用于交互的可访问性树（accessibility tree）。
+
+## 自动快照
+
+每条命令都会返回页面信息以及指向快照文件的链接：
+
+```txt
+### Page
+- Page URL: https://demo.playwright.dev/todomvc/#/
+- Page Title: React - TodoMVC
+### Snapshot
+- [Snapshot](.playwright-cli/page-2026-02-14T19-22-42-679Z.yml)
+```
+
+快照文件里就是这棵可访问性树：
+
+```yaml
+- heading "todos" [level=1]
+- textbox "What needs to be done?" [ref=e5]
+- listitem:
+  - checkbox "Toggle Todo" [ref=e10]
+  - text: "Buy groceries"
+- listitem:
+  - checkbox "Toggle Todo" [ref=e14]
+  - text: "Water flowers"
+- contentinfo:
+  - text: "2 items left"
+  - link "All" [ref=e20]
+  - link "Active" [ref=e21]
+  - link "Completed" [ref=e22]
+```
+
+## 元素 ref
+
+每个可交互元素都会获得一个唯一的 ref（例如 `e5`、`e10`）。ref 在**单次快照内是稳定的**，但页面一旦变化就会失效 —— 导航之后务必重新快照。
+
+| 属性 | 说明 |
+| --- | --- |
+| 格式 | 字母 `e` 后跟一个数字（例如 `e1`、`e15`、`e203`） |
+| 作用域 | 在单次快照内唯一 |
+| 有效期 | 直到下一次页面变化之前都有效 |
+| 分配对象 | 只有可交互元素会获得 ref（按钮、链接、输入框等） |
+
+## 按需快照
+
+以下这些选项可以自由组合。
+
+```bash
+playwright-cli snapshot                        # 整页快照，文件名带时间戳
+playwright-cli snapshot --filename=after.yaml  # 自定义文件名
+playwright-cli snapshot "#main"                # 限定到某个 CSS 选择器
+playwright-cli snapshot e34                    # 限定到某个元素 ref
+playwright-cli snapshot --depth=4              # 限制树的深度
+playwright-cli snapshot --boxes                # 附上元素的包围盒
+```
+
+`--boxes` 会在每个元素后追加 `[box=x,y,width,height]`。坐标是相对视口的 CSS 像素，与 `Element.getBoundingClientRect()` 返回的一致 —— 可作为[基于坐标的交互](/docs/vision-mode)的输入。
+
+在层级很深的页面上，一个常见做法是先取一份浅层快照，再对感兴趣的子树取一份局部快照：
+
+```bash
+playwright-cli snapshot --depth=4
+playwright-cli snapshot e34
+```
+
+## 搜索快照
+
+在大页面上，用 `find` 比抓取整棵树要省得多。它会返回匹配的节点，以及每个匹配项上下各三行上下文（类似 `grep -C`），并保留它们从树根开始的路径。
+
+```bash
+# 不区分大小写的子串匹配
+playwright-cli find "Add to cart"
+
+# 正则表达式，默认区分大小写
+playwright-cli find --regex "\\$[0-9]+\\.[0-9]{2}"
+
+# 用斜杠把模式包起来即可附加 flags
+playwright-cli find --regex "/sign (in|up)/i"
+```
+
+文本参数和 `--regex` 二选一，不要同时使用。
+
+## 使用 ref
+
+```bash
+playwright-cli click e10                   # 勾选复选框
+playwright-cli fill e5 "Walk the dog"      # 在文本框中输入
+playwright-cli hover e20                   # 悬停在 “All” 链接上
+```
+
+## 使用选择器
+
+CSS 选择器和 Playwright locator 也可以替代 ref 使用：
+
+```bash
+# CSS 选择器
+playwright-cli click "#main > button.submit"
+playwright-cli click "[data-testid='submit']"
+
+# Playwright locators
+playwright-cli click "getByRole('button', { name: 'Submit' })"
+playwright-cli click "getByTestId('submit-button')"
+playwright-cli click "getByText('Login')"
+```
+
+## 原始输出
+
+`--raw` 是一个全局选项，它会去掉页面状态、生成的代码和快照这几个部分，只留下结果值。正是它让输出可以通过管道传递：
+
+```bash
+playwright-cli --raw snapshot > before.yml
+playwright-cli click e5
+playwright-cli --raw snapshot > after.yml
+diff before.yml after.yml
+```
+
+## 最佳实践
+
+1. **优先用 ref，而不是选择器** —— 快照给出的 ref 更可靠，因为它指向智能体刚刚看到的那个确切元素
+2. **导航后重新快照** —— 页面变化时 ref 会失效
+3. **用搜索代替整页抓取** —— 只需要定位某个元素时使用 `find`
+4. **限制深度** —— 在复杂页面上用 `--depth` 减小输出体积
+5. **限定到具体元素** —— 只对某个局部区域做快照，而不是整个页面
+6. **为快照文件命名** —— 当快照是工作流结果的一部分时，使用 `--filename`
+7. **留意对话框** —— 如果某条命令报告有对话框打开，先处理它，再继续其他操作

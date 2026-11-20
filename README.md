@@ -2,6 +2,23 @@
 
 具有 SKILLS 功能的 Playwright CLI
 
+## 本站开发
+
+本仓库是 Playwright CLI 的中文站点（落地页 + 文档），基于 [Fumadocs](https://fumadocs.dev)（Next.js 16 + React 19 + Tailwind CSS 4）构建，使用 [Bun](https://bun.sh) 作为包管理器与运行时。文档内容译自 [playwright.dev/agent-cli](https://playwright.dev/agent-cli/introduction)，位于 `content/docs/`。
+
+```bash
+bun install        # 安装依赖
+bun run dev        # 开发服务器（http://localhost:3000）
+bun run build      # 生产构建（全部页面静态生成）
+bun run start      # 运行生产构建
+bun run types:check # 类型检查
+```
+
+- 落地页：`app/(home)/page.tsx`（编辑风格设计，样式见 `app/landing.css`）
+- 文档：`app/docs/` + `content/docs/`（MDX，侧边栏由 `content/docs/meta.json` 定义）
+- 静态资源（自托管字体、图片）：`public/assets/`
+- 附带 LLM 友好输出：`/llms.txt`、`/llms-full.txt`，任意文档页加 `.md` 后缀可获取 Markdown 版本
+
 ### Playwright CLI vs Playwright MCP
 
 本包提供 Playwright 的 CLI 接口。如果你使用的是**编码代理**，这是最佳选择。

@@ -1,0 +1,306 @@
+---
+title: 配置
+description: headless 模式、浏览器选择、设备模拟、配置文件、环境变量与全部 open/attach 参数。
+---
+
+## 有头与无头模式
+
+CLI 默认以 **headless（无头）** 模式运行。想要看到浏览器窗口：
+
+```bash
+playwright-cli open https://playwright.dev --headed
+```
+
+## 浏览器选择
+
+```bash
+playwright-cli open --browser=chrome     # Google Chrome（默认）
+playwright-cli open --browser=firefox    # Mozilla Firefox
+playwright-cli open --browser=webkit     # WebKit（Safari 内核）
+playwright-cli open --browser=msedge     # Microsoft Edge
+```
+
+## 设备模拟
+
+```bash
+# 模拟通用移动设备：Chromium 用 Pixel 10，WebKit 用 iPhone 17
+playwright-cli open --mobile
+
+# 模拟 Playwright 设备列表中的具名设备
+playwright-cli open --device="iPhone 15"
+```
+
+只要能接受移动端布局，默认优先选用 `--mobile` 往往更划算：移动页面通常更轻量，因此快照也更小、更省 token。
+
+## Profile 模式
+
+### 内存模式（默认）
+
+cookie 和存储会在命令之间保留，但浏览器关闭后即丢失：
+
+```bash
+playwright-cli open https://example.com
+```
+
+### 持久化模式
+
+Profile 会保存到磁盘，浏览器重启后依然存在：
+
+```bash
+playwright-cli open https://example.com --persistent
+```
+
+### 自定义 profile 目录
+
+```bash
+playwright-cli open https://example.com --profile=./my-profile
+```
+
+### 隔离模式
+
+显式声明使用内存模式 —— 效果与默认一致，但可以在配置文件中设置：
+
+```json
+{
+  "browser": { "isolated": true }
+}
+```
+
+## 配置文件
+
+需要更高级的设置时，请使用配置文件：
+
+```bash
+playwright-cli open example.com --config=path/to/config.json
+```
+
+配置来自四个来源并逐层合并，后者会覆盖前者：
+
+1. `~/.playwright/cli.config.json` —— 所有工作区通用的全局默认值
+2. 工作区中的 `.playwright/cli.config.json` —— 存在时自动加载，可被显式的 `--config` 覆盖
+3. `PLAYWRIGHT_MCP_*` 环境变量
+4. 命令行选项，例如 `--browser`、`--headed`、`--device`、`--profile`
+
+### 完整配置 schema
+
+```typescript
+{
+  browser?: {
+    browserName?: 'chromium' | 'firefox' | 'webkit';
+    isolated?: boolean;            // 把 profile 保存在内存中
+    userDataDir?: string;
+    launchOptions?: {
+      channel?: string;            // 'chrome', 'msedge', ...
+      headless?: boolean;
+      executablePath?: string;
+      args?: string[];
+      chromiumSandbox?: boolean;
+      slowMo?: number;
+      timeout?: number;
+      proxy?: {
+        server: string;            // 例如 "http://myproxy:3128"
+        bypass?: string;           // 例如 ".com,chromium.org"
+        username?: string;
+        password?: string;
+      };
+    };
+    contextOptions?: {
+      viewport?: { width: number; height: number };
+      locale?: string;
+      timezoneId?: string;
+      userAgent?: string;
+      colorScheme?: 'light' | 'dark' | 'no-preference';
+      storageState?: string;
+      permissions?: string[];      // 例如 ['geolocation', 'clipboard-read']
+      ignoreHTTPSErrors?: boolean;
+      serviceWorkers?: 'allow' | 'block';
+    };
+    cdpEndpoint?: string;
+    cdpHeaders?: Record<string, string>;
+    cdpTimeout?: number;           // 默认 30000，设为 0 表示禁用
+    remoteEndpoint?: string | { endpoint: string, headers?, slowMo?, timeout? };
+    initPage?: string[];           // 用于页面设置的 TypeScript 文件
+    initScript?: string[];         // 用于页面初始化的 JavaScript 文件
+  };
+  extension?: boolean;
+  server?: {
+    port?: number;
+    host?: string;
+    allowedHosts?: string[];
+  };
+  capabilities?: string[];         // MCP 工具能力；CLI 会全部启用
+  saveSession?: boolean;
+  sharedBrowserContext?: boolean;
+  outputDir?: string;
+  outputMaxSize?: number;          // 输出文件的清理阈值，单位为字节
+  console?: { level?: 'error' | 'warning' | 'info' | 'debug' };
+  network?: {
+    allowedOrigins?: string[];     // 例如 ["https://api.example.com", "http://localhost:*"]
+    blockedOrigins?: string[];
+  };
+  secrets?: Record<string, string>;
+  testIdAttribute?: string;        // 默认值："data-testid"
+  timeouts?: {
+    action?: number;               // 默认值：5000ms
+    navigation?: number;           // 默认值：60000ms
+    expect?: number;               // 默认值：5000ms
+    settle?: number;               // 默认值：500ms
+  };
+  imageResponses?: 'allow' | 'omit';
+  snapshot?: {
+    mode?: 'full' | 'none';
+    boxes?: boolean;               // 在快照中包含 [box=x,y,width,height]
+  };
+  allowUnrestrictedFileAccess?: boolean;
+  codegen?: 'typescript' | 'python' | 'java' | 'csharp' | 'none';
+}
+```
+
+### 配置示例
+
+**本地开发：**
+
+```json
+{
+  "browser": {
+    "launchOptions": { "headless": false }
+  }
+}
+```
+
+**CI 环境：**
+
+```json
+{
+  "browser": {
+    "launchOptions": { "headless": true },
+    "contextOptions": { "viewport": { "width": 1280, "height": 720 } }
+  },
+  "outputDir": "./test-output"
+}
+```
+
+**通过代理访问：**
+
+```json
+{
+  "browser": {
+    "launchOptions": {
+      "proxy": {
+        "server": "http://proxy.corp.example.com:8080",
+        "bypass": "localhost,*.internal.com"
+      }
+    }
+  }
+}
+```
+
+**设备模拟：**
+
+```json
+{
+  "browser": {
+    "contextOptions": {
+      "viewport": { "width": 375, "height": 812 },
+      "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)..."
+    }
+  }
+}
+```
+
+**初始化脚本：**
+
+```json
+{
+  "browser": {
+    "initScript": ["./setup.js"],
+    "initPage": ["./setup-page.ts"]
+  }
+}
+```
+
+## 打印最终配置
+
+查看合并了 CLI 选项、环境变量和配置文件之后的最终配置：
+
+```bash
+playwright-cli config-print
+```
+
+## 浏览器扩展
+
+连接到你已经打开的浏览器标签页，而不是新启动一个浏览器：
+
+```bash
+playwright-cli attach --extension
+```
+
+详情参见 [Attach](/docs/commands/attach)。
+
+## 环境变量
+
+| 变量 | 说明 |
+| --- | --- |
+| `PLAYWRIGHT_CLI_SESSION` | 默认会话名 |
+| `PLAYWRIGHT_MCP_ALLOWED_HOSTS` | 服务器允许的主机（以逗号分隔） |
+| `PLAYWRIGHT_MCP_ALLOWED_ORIGINS` | 浏览器允许请求的 origin（以分号分隔） |
+| `PLAYWRIGHT_MCP_ALLOW_UNRESTRICTED_FILE_ACCESS` | 允许访问工作区之外的文件 |
+| `PLAYWRIGHT_MCP_BLOCKED_ORIGINS` | 需要屏蔽的 origin（以分号分隔） |
+| `PLAYWRIGHT_MCP_BLOCK_SERVICE_WORKERS` | 屏蔽 service worker |
+| `PLAYWRIGHT_MCP_BROWSER` | 使用的浏览器（chrome、firefox、webkit、msedge 等） |
+| `PLAYWRIGHT_MCP_CAPS` | 启用的能力（以逗号分隔） |
+| `PLAYWRIGHT_MCP_CDP_ENDPOINT` | CDP endpoint |
+| `PLAYWRIGHT_MCP_CDP_HEADERS` | 建立 CDP 连接时发送的请求头 |
+| `PLAYWRIGHT_MCP_CDP_TIMEOUT` | CDP 连接超时时间（毫秒） |
+| `PLAYWRIGHT_MCP_CODEGEN` | 代码生成语言 |
+| `PLAYWRIGHT_MCP_CONFIG` | 配置文件路径 |
+| `PLAYWRIGHT_MCP_CONSOLE_LEVEL` | 控制台消息级别 |
+| `PLAYWRIGHT_MCP_DEVICE` | 要模拟的设备 |
+| `PLAYWRIGHT_MCP_EXECUTABLE_PATH` | 自定义浏览器可执行文件 |
+| `PLAYWRIGHT_MCP_EXTENSION` | 通过浏览器扩展连接 |
+| `PLAYWRIGHT_MCP_GRANT_PERMISSIONS` | 浏览器权限（以逗号分隔） |
+| `PLAYWRIGHT_MCP_HEADLESS` | 以 headless 模式运行 |
+| `PLAYWRIGHT_MCP_HOST` | 服务器绑定的 host |
+| `PLAYWRIGHT_MCP_IGNORE_HTTPS_ERRORS` | 忽略 HTTPS 错误 |
+| `PLAYWRIGHT_MCP_IMAGE_RESPONSES` | `allow` 或 `omit` |
+| `PLAYWRIGHT_MCP_INIT_PAGE` | 页面初始化的 TypeScript |
+| `PLAYWRIGHT_MCP_INIT_SCRIPT` | 页面初始化的 JavaScript |
+| `PLAYWRIGHT_MCP_ISOLATED` | 内存中的 profile |
+| `PLAYWRIGHT_MCP_MOBILE` | 模拟通用移动设备 |
+| `PLAYWRIGHT_MCP_OUTPUT_DIR` | 输出目录 |
+| `PLAYWRIGHT_MCP_OUTPUT_MAX_SIZE` | 输出文件清理阈值（字节） |
+| `PLAYWRIGHT_MCP_PORT` | 服务器端口 |
+| `PLAYWRIGHT_MCP_PROFILE_DIR_NAME` | 扩展模式下使用的 profile 目录名 |
+| `PLAYWRIGHT_MCP_PROXY_BYPASS` | 绕过代理的域名 |
+| `PLAYWRIGHT_MCP_PROXY_SERVER` | 代理服务器 URL |
+| `PLAYWRIGHT_MCP_REMOTE_HEADERS` | 连接远程 endpoint 时发送的请求头 |
+| `PLAYWRIGHT_MCP_SANDBOX` | 启用或禁用 Chromium 沙箱 |
+| `PLAYWRIGHT_MCP_SECRETS_FILE` | secrets 文件（dotenv 格式） |
+| `PLAYWRIGHT_MCP_STORAGE_STATE` | 存储状态文件 |
+| `PLAYWRIGHT_MCP_TEST_ID_ATTRIBUTE` | Test ID 属性 |
+| `PLAYWRIGHT_MCP_TIMEOUT_ACTION` | 操作超时时间（毫秒） |
+| `PLAYWRIGHT_MCP_TIMEOUT_NAVIGATION` | 导航超时时间（毫秒） |
+| `PLAYWRIGHT_MCP_TIMEOUT_SETTLE` | 操作后的 settle 超时时间（毫秒） |
+| `PLAYWRIGHT_MCP_USER_AGENT` | 自定义 user agent |
+| `PLAYWRIGHT_MCP_USER_DATA_DIR` | Profile 目录 |
+| `PLAYWRIGHT_MCP_VIEWPORT_SIZE` | 视口大小（例如 "1280x720"） |
+
+## open 与 attach 的全部参数
+
+```bash
+playwright-cli open [url]                          # 打开浏览器
+playwright-cli open --headed                       # 显示浏览器窗口
+playwright-cli open --browser=firefox              # 指定浏览器
+playwright-cli open --mobile                       # 通用移动设备
+playwright-cli open --device="iPhone 15"           # 具名设备
+playwright-cli open --persistent                   # 把 profile 持久化到磁盘
+playwright-cli open --profile=<path>               # 自定义 profile 目录
+playwright-cli open --config=file.json             # 使用配置文件
+
+playwright-cli attach [name]                       # 按名称附着到已绑定的浏览器
+playwright-cli attach --extension                  # 通过扩展连接
+playwright-cli attach --cdp=chrome                 # 连接到正在运行的 channel
+playwright-cli attach --cdp=<url>                  # 通过 CDP endpoint 连接
+playwright-cli attach --endpoint=<url>             # 连接到 Playwright server
+playwright-cli attach --config=file.json           # 使用配置文件
+```

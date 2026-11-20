@@ -1,0 +1,95 @@
+---
+title: 安装
+description: 安装 Playwright CLI、初始化工作区并安装 skill 与浏览器。
+---
+
+## 前提条件
+
+- [Node.js](https://nodejs.org/) 20 或更新版本
+- 一个编程智能体：Claude Code、GitHub Copilot 或类似工具
+
+## 全局安装
+
+```bash
+npm install -g @playwright/cli@latest
+playwright-cli --help
+```
+
+## 使用项目中的版本
+
+如果项目中已经把 Playwright 作为依赖，就可以直接通过它使用 CLI，无需全局安装。该方式要求 Playwright 1.59 或更新版本：
+
+```bash
+npx --no-install playwright --version   # 确认本地已安装 Playwright
+npx playwright cli --help
+```
+
+本文档中所有写成 `playwright-cli <command>` 的地方，都可以用同样的方式运行 `npx playwright cli <command>`。
+
+## 初始化工作区
+
+```bash
+playwright-cli install
+```
+
+这会在当前工作目录创建一个 `.playwright` 目录，把它加入 `.gitignore`，并在所配置的浏览器缺失时将其下载下来。
+
+## 安装 skills
+
+Claude Code、GitHub Copilot 这类编程智能体会使用本地安装的 skill，从而获得关于可用命令和工作流的更丰富上下文：
+
+```bash
+playwright-cli install --skills            # 等同于 --skills=claude
+playwright-cli install --skills=claude     # .claude/skills/playwright-cli
+playwright-cli install --skills=agents     # .agents/skills/playwright-cli
+playwright-cli install --skills -g         # 安装到主目录
+```
+
+`--global`（别名 `-g`）会把 skill 安装到 `~/.claude/skills` 或 `~/.agents/skills`，使其在所有项目中都可用。它需要配合 `--skills` 使用，并且会跳过工作区初始化。
+
+关于 skill 包含的内容，参见 [Skills](/docs/skills)。
+
+## 安装浏览器
+
+CLI 会在首次使用时自动下载浏览器。如需显式安装：
+
+```bash
+playwright-cli install-browser               # 安装当前版本所需的浏览器
+playwright-cli install-browser firefox       # 只安装某一个指定浏览器
+playwright-cli install-browser --with-deps   # 同时安装系统依赖
+```
+
+### 安装选项
+
+| 参数 | 说明 |
+| --- | --- |
+| `--with-deps` | 安装系统依赖（Linux） |
+| `--dry-run` | 预览将要安装的内容 |
+| `--list` | 列出所有安装中可用的浏览器 |
+| `--force` | 即使已存在也强制重新安装 |
+| `--only-shell` | 只安装 Chromium headless shell |
+| `--no-shell` | 跳过 Chromium headless shell |
+
+## 不安装 skill 的使用方式
+
+你也可以直接让智能体使用 CLI，由它自行发现命令：
+
+```txt
+Test the "add todo" flow on https://demo.playwright.dev/todomvc using playwright-cli.
+Check playwright-cli --help for available commands.
+```
+
+## 环境设置
+
+让编程智能体使用指定的会话：
+
+```bash
+PLAYWRIGHT_CLI_SESSION=todo-app claude .
+```
+
+## 下一步
+
+- [快速上手](/docs/quick-start) —— 动手试用 CLI
+- [快照](/docs/snapshots) —— 元素 ref 的工作原理
+- [命令参考](/docs/capabilities) —— 按组整理的全部命令
+- [配置](/docs/configuration) —— headless 模式、浏览器选择、配置文件

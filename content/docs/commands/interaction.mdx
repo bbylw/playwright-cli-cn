@@ -1,0 +1,136 @@
+---
+title: 交互
+description: 使用快照 ref、CSS 选择器或 Playwright locator 点击、填写、选择、勾选并完成拖放。
+---
+
+## 命令（Commands）
+
+| 命令 | 说明 |
+| --- | --- |
+| `click <target> [button]` | 点击元素（`left`、`right` 或 `middle`） |
+| `dblclick <target> [button]` | 双击元素 |
+| `fill <target> <text>` | 清空输入框并填入文本 |
+| `type <text>` | 向当前聚焦元素输入文本 |
+| `select <target> <value>` | 选择下拉框中的选项 |
+| `check <target>` / `uncheck <target>` | 勾选或取消勾选复选框 / 单选按钮 |
+| `hover <target>` | 悬停在元素上 |
+| `drag <startTarget> <endTarget>` | 在两个元素之间执行拖放 |
+| `drop <target>` | 将页面外部的文件或数据拖放到元素上 |
+| `upload <files...>` | 上传一个或多个文件 |
+| `resize <width> <height>` | 调整浏览器窗口大小 |
+
+## 定位元素
+
+### 使用快照中的 ref（推荐）
+
+```bash
+playwright-cli snapshot                 # get element refs
+playwright-cli click e15                # click by ref
+playwright-cli fill e3 "hello"          # fill by ref
+```
+
+在大型页面上，`find` 可以在不捕获整棵快照树（snapshot）的情况下定位某个元素：
+
+```bash
+playwright-cli find "Add to cart"
+# - button "Add to cart" [ref=e42]
+playwright-cli click e42
+```
+
+### CSS 选择器
+
+```bash
+playwright-cli click "#main > button.submit"
+playwright-cli click "[data-testid='submit']"
+playwright-cli fill "#email" "test@example.com"
+```
+
+### Playwright locator
+
+```bash
+playwright-cli click "getByRole('button', { name: 'Submit' })"
+playwright-cli click "getByTestId('submit-button')"
+playwright-cli click "getByText('Login')"
+playwright-cli fill "getByLabel('Email')" "test@example.com"
+```
+
+## 点击
+
+```bash
+playwright-cli click e15                       # left click
+playwright-cli click e15 right                 # right click (context menu)
+playwright-cli click e15 middle                # middle click
+playwright-cli dblclick e15                    # double click
+
+# hold modifier keys: Alt, Control, ControlOrMeta, Meta, Shift
+playwright-cli click e15 --modifiers=Shift
+playwright-cli click e15 --modifiers=ControlOrMeta --modifiers=Shift
+```
+
+`--modifiers` 可以重复使用 —— 每个修饰键传一次即可。
+
+## 表单交互
+
+```bash
+# Fill a text field
+playwright-cli fill e3 "test@example.com"
+
+# Fill and submit (presses Enter afterwards)
+playwright-cli fill e3 "search query" --submit
+
+# Type into whatever is focused, optionally submitting
+playwright-cli type "search query"
+playwright-cli type "search query" --submit
+
+# Select from dropdown
+playwright-cli select e7 "United States"
+
+# Checkboxes
+playwright-cli check e10                # check
+playwright-cli uncheck e10              # uncheck
+
+# File upload through a file input or file chooser
+playwright-cli upload /path/to/file.pdf
+playwright-cli upload /path/to/a.pdf /path/to/b.pdf
+
+# Resize browser window
+playwright-cli resize 375 812           # mobile viewport
+playwright-cli resize 1920 1080         # desktop
+```
+
+## 拖放
+
+`drag` 把页面内的一个元素移动到另一个元素上。`drop` 模拟的是从页面**外部**发起的拖放 —— 例如从桌面拖入的文件，或从其他应用拖入的文本。
+
+```bash
+# reorder items within the page
+playwright-cli drag e2 e8
+
+# drop files onto a dropzone
+playwright-cli drop e4 --path=/abs/path/to/image.png
+playwright-cli drop e4 --path=/abs/path/a.png --path=/abs/path/b.png
+
+# drop typed data
+playwright-cli drop e4 --data="text/plain=hello world"
+playwright-cli drop e4 --data='application/json={"id":1}'
+```
+
+`--path` 和 `--data` 都可以重复传入。路径必须是绝对路径；`--data` 的每一项使用 `mime/type=value` 格式。
+
+## 工作流：登录表单
+
+```bash
+$ playwright-cli snapshot
+# - textbox "Email" [ref=e3]
+# - textbox "Password" [ref=e5]
+# - checkbox "Remember me" [ref=e7]
+# - button "Sign in" [ref=e9]
+
+$ playwright-cli fill e3 "alice@example.com"
+$ playwright-cli fill e5 "s3cureP@ss!"
+$ playwright-cli check e7
+$ playwright-cli click e9
+
+$ playwright-cli snapshot
+# - heading "Welcome back, Alice!" [level=1]
+```

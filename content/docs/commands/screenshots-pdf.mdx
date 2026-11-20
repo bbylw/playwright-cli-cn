@@ -1,0 +1,67 @@
+---
+title: 截图与 PDF
+description: 使用 screenshot 与 pdf 命令捕获整个视口或单个元素，并了解何时该用截图、何时该用 snapshot。
+---
+
+## 截图
+
+| Command | Description |
+| --- | --- |
+| `screenshot` | 截取视口截图 |
+| `screenshot [target]` | 截取指定元素的截图 |
+| `screenshot --filename=<f>` | 使用自定义文件名保存 |
+| `screenshot --type=<png\|jpeg\|webp>` | 图片格式 |
+| `screenshot --full-page` | 截取整个可滚动页面，而不是视口 |
+| `screenshot --hires` | 捕获设备像素而非 CSS 像素 |
+
+如果不带 `--filename`，文件会在输出目录中被命名为 `page-{timestamp}.{png|jpeg|webp}`。当未指定 `--type` 时，格式由文件扩展名推断，默认为 PNG。
+
+```bash
+$ playwright-cli screenshot
+# Screenshot saved to .playwright-cli/page-2026-03-15T10-22-01-118Z.png
+
+$ playwright-cli screenshot e15
+# Screenshot of element e15
+
+$ playwright-cli screenshot --filename=login-page.png
+$ playwright-cli screenshot --full-page --filename=full-page.png
+$ playwright-cli screenshot --filename=preview.jpeg
+$ playwright-cli screenshot --hires --filename=retina.png
+```
+
+`--hires` 会考虑设备像素比（device pixel ratio），这能让设计评审截图中的文字保持清晰——但它的像素坐标不再与[鼠标命令](/docs/commands/keyboard-mouse)所使用的 CSS 像素坐标对齐。
+
+## PDF 导出
+
+```bash
+playwright-cli pdf                      # save as page-{timestamp}.pdf
+playwright-cli pdf --filename=page.pdf  # save with custom name
+```
+
+## 何时使用截图
+
+截图是对可访问性 snapshot 的补充：
+
+| 使用场景 | 最合适的工具 |
+| --- | --- |
+| 与元素交互 | 可访问性 snapshot（ref） |
+| 校验视觉布局 | 截图 |
+| Canvas / 图表内容 | 截图 |
+| 记录一个 bug | 截图 |
+| 理解页面结构 | 可访问性 snapshot |
+| 读取文本内容 | 可访问性 snapshot |
+
+## 快照
+
+如果需要同的是可访问性树输出（而不是视觉捕获）：
+
+```bash
+playwright-cli snapshot                 # full page snapshot
+playwright-cli snapshot --filename=f    # custom filename
+playwright-cli snapshot [target]        # element snapshot
+playwright-cli snapshot --depth=N       # limit depth
+playwright-cli snapshot --boxes         # include bounding boxes
+playwright-cli find "text"              # search instead of capturing
+```
+
+关于格式与用法的细节，参见[快照](/docs/snapshots)。
