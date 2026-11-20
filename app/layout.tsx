@@ -1,6 +1,23 @@
-import { RootProvider } from 'fumadocs-ui/provider/next';
+import localFont from 'next/font/local';
+import { Provider } from '@/components/provider';
 import './global.css';
 import type { Metadata } from 'next';
+
+const playfair = localFont({
+  src: [
+    { path: '../public/assets/playfair-display-latin.woff2', weight: '400 900', style: 'normal' },
+    { path: '../public/assets/playfair-display-italic-latin.woff2', weight: '400 900', style: 'italic' },
+  ],
+  variable: '--font-playfair',
+  display: 'swap',
+});
+
+const sourceSans = localFont({
+  src: '../public/assets/source-sans-3-latin.woff2',
+  weight: '300 700',
+  variable: '--font-source-sans',
+  display: 'swap',
+});
 
 const zhCN = {
   'Search(search dialog)': '搜索文档',
@@ -71,11 +88,11 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: LayoutProps<'/'>) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="zh-CN" className={`${playfair.variable} ${sourceSans.variable}`} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <RootProvider i18n={{ locale: 'zh-CN', translations: zhCN }}>
+        <Provider i18n={{ locale: 'zh-CN', translations: zhCN }}>
           {children}
-        </RootProvider>
+        </Provider>
       </body>
     </html>
   );

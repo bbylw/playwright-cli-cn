@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { preload } from 'react-dom';
 import Link from 'next/link';
 import { LandingEffects } from '@/components/landing-effects';
+import { basePath } from '@/lib/shared';
 
 export const metadata: Metadata = {
   title: {
@@ -37,9 +37,6 @@ const configJsonHtml = `<code>{
 }</code>`;
 
 export default function HomePage() {
-  preload('/assets/playfair-display-latin.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
-  preload('/assets/source-sans-3-latin.woff2', { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
-
   return (
     <div id="top" className="landing-root noise-overlay bg-paper text-ink font-sans">
       <a href="#main" className="skip-link font-sans">跳转到主要内容</a>
@@ -686,10 +683,10 @@ export default function HomePage() {
                           {/* Real Dashboard Image */}
                           <div className="relative mb-12 border border-paper/10 overflow-hidden">
                               <picture>
-                                  <source srcSet="/assets/dashboard.avif" type="image/avif" />
-                                  <source srcSet="/assets/dashboard.webp" type="image/webp" />
+                                  <source srcSet={`${basePath}/assets/dashboard.avif`} type="image/avif" />
+                                  <source srcSet={`${basePath}/assets/dashboard.webp`} type="image/webp" />
                                   <img
-                                      src="/assets/dashboard.webp"
+                                      src={`${basePath}/assets/dashboard.webp`}
                                       alt="Playwright CLI 可视化仪表板 - 显示多个浏览器会话的实时预览和控制界面"
                                       className="w-full h-auto"
                                       width="1107"

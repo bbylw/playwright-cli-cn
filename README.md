@@ -9,15 +9,18 @@
 ```bash
 bun install        # 安装依赖
 bun run dev        # 开发服务器（http://localhost:3000）
-bun run build      # 生产构建（全部页面静态生成）
-bun run start      # 运行生产构建
+bun run build      # 生产构建（静态导出到 out/）
 bun run types:check # 类型检查
 ```
 
 - 落地页：`app/(home)/page.tsx`（编辑风格设计，样式见 `app/landing.css`）
 - 文档：`app/docs/` + `content/docs/`（MDX，侧边栏由 `content/docs/meta.json` 定义）
 - 静态资源（自托管字体、图片）：`public/assets/`
-- 附带 LLM 友好输出：`/llms.txt`、`/llms-full.txt`，任意文档页加 `.md` 后缀可获取 Markdown 版本
+- 附带 LLM 友好输出：`/llms.txt`、`/llms-full.txt`，`/llms.mdx/docs/<页面>.md` 提供各页 Markdown 版本
+
+### 部署
+
+推送到 `main` 后由 GitHub Actions（`.github/workflows/deploy.yml`）自动构建并部署到 GitHub Pages。构建时设置 `NEXT_PUBLIC_BASE_PATH=/playwright-cli-cn`（项目站点子路径），产物为纯静态文件（`output: 'export'`），搜索索引随站点导出、在浏览器内查询。自定义域名由 `public/CNAME` 固定。本地预览构建产物：`NEXT_PUBLIC_BASE_PATH=/playwright-cli-cn bun run build` 后用任意静态服务器托管 `out/`。
 
 ### Playwright CLI vs Playwright MCP
 
